@@ -3,34 +3,53 @@
 
 #include "stdafx.h"
 #include <GL/glut.h>
+#include <math.h>
 
-void drawSquare(double x, double y, double width, double height)
+#define BIRD_SIZE 0.3
+
+class Bird
+{
+public:
+	double x;
+	double y;
+	double dx;
+	double dy;
+	Bird(double _x, double _y, double _dx, double _dy)
+	{
+		x = _x;
+		y = _y;
+		dx = _dx;
+		dy = _dy;
+	}
+};
+
+void drawBird(Bird bird)
 {
 	glBegin(GL_POLYGON);
-	glVertex2d(x, y);
-	glVertex2d(x + width, y);
-	glVertex2d(x + width, y + height);
-	glVertex2d(x, y + height);
+	glVertex2d(bird.x, bird.y + BIRD_SIZE);
+	glVertex2d(bird.x - BIRD_SIZE * sqrt(3.0) / 2.0, bird.y - BIRD_SIZE / 2.0);
+	glVertex2d(bird.x + BIRD_SIZE * sqrt(3.0) / 2.0, bird.y - BIRD_SIZE / 2.0);
 	glEnd();
 }
 
 void display(void)
 {
+	Bird birds[4] = { Bird(-0.5, -0.5, 0.0, 0.0), Bird(0.5, -0.5, 0.0, 0.0) , Bird(-0.5, 0.5, 0.0, 0.0) , Bird(0.5, 0.5, 0.0, 0.0) };
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3d(1.0, 0.0, 0.0);
-	drawSquare(-1.0, -1.0, 1.0, 1.0);
+	drawBird(birds[0]);
 	glColor3d(0.0, 1.0, 0.0);
-	drawSquare(0.0, -1.0, 1.0, 1.0);
+	drawBird(birds[1]);
 	glColor3d(0.0, 0.0, 1.0);
-	drawSquare(-1.0, 0.0, 1.0, 1.0);
+	drawBird(birds[2]);
 	glColor3d(1.0, 0.0, 1.0);
-	drawSquare(0.0, 0.0, 1.0, 1.0);
+	drawBird(birds[3]);
 	glFlush();
 }
 
 void init(void)
 {
-	glClearColor(0.0, 0.0, 1.0, 1.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
 int main(int argc, char* argv[])
