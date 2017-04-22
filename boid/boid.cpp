@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include <GL/glut.h>
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -11,6 +10,8 @@
 #define BIRD_SPEED 0.1 //initial bird speed
 #define BIRDS_NO 10 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
+
+int time = 0;
 
 class Bird
 {
@@ -34,7 +35,9 @@ public:
 	{
 		x += dx * FLAME_RATE / 1000.0;
 		y += dy * FLAME_RATE / 1000.0;
-		angle = asin(dy / dx);
+		double speed = sqrt(dx * dx + dy * dy);
+		angle = acos(dy / speed);
+		// TODO:角度計算がおかしい
 	}
 };
 
@@ -50,15 +53,15 @@ double degreeToRadian(int deg)
 	return deg * M_PI / 180.0;
 }
 
-void drawBird(Bird bird)
+void drawBird(Bird bird) //TODO:鳥らしく
 {
 	glPushMatrix();
 	glTranslated(bird.x, bird.y, 0.0);
 	glRotated(radianToDegree(bird.angle), 0.0, 0.0, 1.0);
 	glBegin(GL_POLYGON);
 	glVertex2d(0.0, BIRD_SIZE);
-	glVertex2d(- BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
-	glVertex2d(BIRD_SIZE * sqrt(3.0) / 2.0, - BIRD_SIZE / 2.0);
+	glVertex2d(-0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
+	glVertex2d(0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, - BIRD_SIZE / 2.0);
 	glEnd();
 	glPopMatrix();
 }
@@ -78,10 +81,20 @@ void timer(int value)
 {
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		birds[i].updatePosition();
+		birds[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
+		if (time == 20)
+		{
+			birds[i].dx = 0.0;
+			birds[i].dy = -1.0;
+		}
+	}
+	if (time % 10 == 0)
+	{
+		printf("[%f, %f]:%f\n", birds[0].dx, birds[0].dy, radianToDegree(birds[0].angle));
 	}
 	glutPostRedisplay();
-	glutTimerFunc(FLAME_RATE, timer, 0);
+	time++;
+	glutTimerFunc(FLAME_RATE, timer, time);
 }
 
 void init(void)
@@ -100,7 +113,7 @@ int main(int argc, char* argv[])
 		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) / RAND_MAX, double(rand()) / RAND_MAX * 2.0 * M_PI);
 	}
 	glutDisplayFunc(display);
-	glutTimerFunc(FLAME_RATE, timer, 0);
+	glutTimerFunc(FLAME_RATE, timer, time);
 	glutMainLoop();
 	return 0;
 }
