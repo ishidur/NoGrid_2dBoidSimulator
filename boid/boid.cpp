@@ -8,7 +8,7 @@
 
 #define BIRD_SIZE 0.5 //size of bird
 #define BIRD_SPEED 2.0 //initial bird speed
-#define BIRDS_NO 20 //number of birds
+#define BIRDS_NO 50 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 10.0 //area boundary
@@ -27,6 +27,7 @@ double checkBoundary(double pos)
 	}
 	return pos;
 }
+
 // TODO:Boidモデルの速度ベクトルの計算を実装
 class Bird
 {
@@ -54,18 +55,21 @@ public:
 		y = checkBoundary(y);
 		double speed = sqrt(dx * dx + dy * dy);
 		angle = acos(dy / speed);
-		// TODO:角度計算がおかしい
+		if (dx > 0.0)
+		{
+			angle = -angle;
+		}
 	}
 };
 
 Bird birds[BIRDS_NO];
 
-double radianToDegree(int rad)
+double radianToDegree(double rad)
 {
 	return rad * 180.0 / M_PI;
 }
 
-double degreeToRadian(int deg)
+double degreeToRadian(double deg)
 {
 	return deg * M_PI / 180.0;
 }
@@ -105,12 +109,12 @@ void timer(int value)
 {
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		birds[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
-//		if (time == 20)
-//		{
-//			birds[i].dx = 0.0;
-//			birds[i].dy = -1.0;
-//		}
+		birds[i].updatePosition(); //TODO:boidの次の時間ステップにおける速度ベクトルの計算
+		if (time % 50 == 49)
+		{
+			birds[i].dx = (double(rand() % 3) - 1.0) * BIRD_SPEED;
+			birds[i].dy = (double(rand() % 3) - 1.0) * BIRD_SPEED;
+		}
 	}
 	if (time % 10 == 0)
 	{
