@@ -6,17 +6,17 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#define BIRD_SIZE 0.5 //size of bird
+#define BIRD_SIZE 0.3 //size of bird
 #define BIRD_SPEED 2.0 //initial bird speed
 #define BIRDS_NO 30 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 10.0 //area boundary
-#define VIEW_ANGLE 30.0 //bird view angle
+#define VIEW_ANGLE 30.0 //bird view angle: degree
 #define OPTIMUM_DISTANCE 2.0 //
 #define GRAVITY_WEIGHT 0.5 //gravity point weight
 #define DISTANT_WEIGHT 1.0 //nearest bird weight
-#define ALIGNMENT_WEIGHT 2.0 //alignment weight
+#define ALIGNMENT_WEIGHT 0.8 //alignment weight
 
 int time = 0; //time
 
@@ -87,27 +87,39 @@ public:
 		y += dy * FLAME_RATE / 1000.0;
 		x = checkBoundary(x);
 		y = checkBoundary(y);
-		double speed = calcDist(dx, dy, 0.0, 0.0);
-		angle = acos(dy / speed);
-		if (dx > 0.0)
+		angle = -atan(dx / dy);
+		if (dy < 0.0)
 		{
-			angle = -angle;
+			angle += M_PI;
 		}
 	}
 
-	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO])
+	bool visible(Bird bird, double viewAngle)
 	{
-		Bird nearestBird = birds[0];
-		double minDist = calcDist(x, y, nearestBird.x, nearestBird.y);
-		if (minDist == 0.0)
+		double minView = angle - viewAngle;
+		double maxView = angle + viewAngle;
+		double direction = atan((bird.x - x) / (bird.y - y));
+		if ((bird.y - y) < 0.0)
 		{
-			nearestBird = birds[1];
-			minDist = calcDist(x, y, nearestBird.x, nearestBird.y);
+			direction += M_PI;
 		}
-		for (int i = 1; i < BIRDS_NO; i++)
+		bool min = minView < -M_PI / 2.0 ? minView + 2.0 * M_PI <= direction : minView <= direction;
+		bool max = maxView > 3.0 * M_PI / 2.0 ? maxView - 2.0 * M_PI >= direction : maxView >= direction;
+		if (min && max)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:éãñÏÇê›íË
+	{
+		Bird nearestBird;
+		double minDist = 0.0;
+		for (int i = 0; i < BIRDS_NO; i++) //TODO:ÉãÅ[ÉvÇégÇÌÇ∏Ç…íTçıÇ≈Ç´ÇÈÇÊÇ§Ç…ÇµÇΩÇ¢
 		{
 			double dist = calcDist(x, y, birds[i].x, birds[i].y);
-			if (minDist >= dist && dist != 0.0)
+			if ((minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
 				nearestBird = birds[i];
 				minDist = dist;
@@ -148,28 +160,24 @@ void timer(int value)
 	}
 	gx /= double(BIRDS_NO);
 	gy /= double(BIRDS_NO);
-	double viewAngle = degreeToRadian(VIEW_ANGLE);
+	double viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
 	for (int i = 0; i < BIRDS_NO; ++i)
 	{
 		double dist = calcDist(gx, gy, birds[i].x, birds[i].y);
-		double gvx = 0.0;
-		double gvy = 0.0;
-		gvx = (gx - birds[i].x) / dist;
-		gvy = (gy - birds[i].y) / dist;
+		double gvx = (gx - birds[i].x) / dist;
+		double gvy = (gy - birds[i].y) / dist;
 		Bird nearestBird = birds[i].findNearestBird(viewAngle, birds);
-		double nvx = 0.0;
-		double nvy = 0.0;
 		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
-		nvx = (nearestBird.x - birds[i].x) / birdDist;
-		nvy = (nearestBird.y - birds[i].y) / birdDist;
+		double nvx = (nearestBird.x - birds[i].x) / birdDist;
+		double nvy = (nearestBird.y - birds[i].y) / birdDist;
 		if (birdDist < OPTIMUM_DISTANCE)
 		{
 			nvx = -nvx;
 			nvy = -nvy;
 		}
 		double dv = calcDist(birds[i].dx, birds[i].dy, nearestBird.dx, nearestBird.dy);
-		double avx = (nearestBird.dx - birds[i].dx)/dv;
-		double avy = (nearestBird.dy - birds[i].dy)/dv;
+		double avx = (nearestBird.dx - birds[i].dx) / dv;
+		double avy = (nearestBird.dy - birds[i].dy) / dv;
 
 		birds[i].dx += GRAVITY_WEIGHT * gvx + DISTANT_WEIGHT * nvx + ALIGNMENT_WEIGHT * avx;
 		birds[i].dy += GRAVITY_WEIGHT * gvy + DISTANT_WEIGHT * nvy + ALIGNMENT_WEIGHT * avy;
