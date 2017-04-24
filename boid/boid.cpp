@@ -8,10 +8,15 @@
 
 #define BIRD_SIZE 0.5 //size of bird
 #define BIRD_SPEED 2.0 //initial bird speed
-#define BIRDS_NO 50 //number of birds
+#define BIRDS_NO 30 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 10.0 //area boundary
+#define VIEW_ANGLE 30.0 //bird view angle
+#define OPTIMUM_DISTANCE 2.0 //
+#define GRAVITY_WEIGHT 0.5 //gravity point weight
+#define DISTANT_WEIGHT 1.0 //nearest bird weight
+#define ALIGNMENT_WEIGHT 2.0 //alignment weight
 
 int time = 0; //time
 
@@ -37,6 +42,11 @@ double radianToDegree(double rad)
 double degreeToRadian(double deg)
 {
 	return deg * M_PI / 180.0;
+}
+
+double calcDist(double x1, double y1, double x2, double y2)
+{
+	return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
 // TODO:Boidモデルの速度ベクトルの計算を実装
@@ -77,12 +87,33 @@ public:
 		y += dy * FLAME_RATE / 1000.0;
 		x = checkBoundary(x);
 		y = checkBoundary(y);
-		double speed = sqrt(dx * dx + dy * dy);
+		double speed = calcDist(dx, dy, 0.0, 0.0);
 		angle = acos(dy / speed);
 		if (dx > 0.0)
 		{
 			angle = -angle;
 		}
+	}
+
+	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO])
+	{
+		Bird nearestBird = birds[0];
+		double minDist = calcDist(x, y, nearestBird.x, nearestBird.y);
+		if (minDist == 0.0)
+		{
+			nearestBird = birds[1];
+			minDist = calcDist(x, y, nearestBird.x, nearestBird.y);
+		}
+		for (int i = 1; i < BIRDS_NO; i++)
+		{
+			double dist = calcDist(x, y, birds[i].x, birds[i].y);
+			if (minDist >= dist && dist != 0.0)
+			{
+				nearestBird = birds[i];
+				minDist = dist;
+			}
+		}
+		return nearestBird;
 	}
 };
 
@@ -108,19 +139,42 @@ void resize(int w, int h)
 
 void timer(int value)
 {
+	double gx = 0.0, gy = 0.0;
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
 		birds[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
-		if (time % 50 == 49)
-		{
-			birds[i].dx = (double(rand() % 3) - 1.0) * BIRD_SPEED;
-			birds[i].dy = (double(rand() % 3) - 1.0) * BIRD_SPEED;
-		}
+		gx += birds[i].x;
+		gy += birds[i].y;
 	}
-	if (time % 10 == 0)
+	gx /= double(BIRDS_NO);
+	gy /= double(BIRDS_NO);
+	double viewAngle = degreeToRadian(VIEW_ANGLE);
+	for (int i = 0; i < BIRDS_NO; ++i)
 	{
-		printf("[%f, %f]:%f\n", birds[0].dx, birds[0].dy, radianToDegree(birds[0].angle));
+		double dist = calcDist(gx, gy, birds[i].x, birds[i].y);
+		double gvx = 0.0;
+		double gvy = 0.0;
+		gvx = (gx - birds[i].x) / dist;
+		gvy = (gy - birds[i].y) / dist;
+		Bird nearestBird = birds[i].findNearestBird(viewAngle, birds);
+		double nvx = 0.0;
+		double nvy = 0.0;
+		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
+		nvx = (nearestBird.x - birds[i].x) / birdDist;
+		nvy = (nearestBird.y - birds[i].y) / birdDist;
+		if (birdDist < OPTIMUM_DISTANCE)
+		{
+			nvx = -nvx;
+			nvy = -nvy;
+		}
+		double dv = calcDist(birds[i].dx, birds[i].dy, nearestBird.dx, nearestBird.dy);
+		double avx = (nearestBird.dx - birds[i].dx)/dv;
+		double avy = (nearestBird.dy - birds[i].dy)/dv;
+
+		birds[i].dx += GRAVITY_WEIGHT * gvx + DISTANT_WEIGHT * nvx + ALIGNMENT_WEIGHT * avx;
+		birds[i].dy += GRAVITY_WEIGHT * gvy + DISTANT_WEIGHT * nvy + ALIGNMENT_WEIGHT * avy;
 	}
+	//boid速度ベクトルの計算部分	}
 	glutPostRedisplay();
 	time++;
 	glutTimerFunc(FLAME_RATE, timer, time);
