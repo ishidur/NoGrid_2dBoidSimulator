@@ -13,7 +13,8 @@
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 10.0 //area boundary
 
-int time = 0;
+int time = 0; //time
+
 //周期的境界条件
 double checkBoundary(double pos)
 {
@@ -26,6 +27,16 @@ double checkBoundary(double pos)
 		pos += BOUNDARY * 2.0;
 	}
 	return pos;
+}
+
+double radianToDegree(double rad)
+{
+	return rad * 180.0 / M_PI;
+}
+
+double degreeToRadian(double deg)
+{
+	return deg * M_PI / 180.0;
 }
 
 // TODO:Boidモデルの速度ベクトルの計算を実装
@@ -47,6 +58,19 @@ public:
 		dy = BIRD_SPEED * cos(_angle);
 	}
 
+	void drawBird() //TODO:鳥らしく
+	{
+		glPushMatrix();
+		glTranslated(x, y, 0.0);
+		glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
+		glBegin(GL_POLYGON);
+		glVertex2d(0.0, BIRD_SIZE);
+		glVertex2d(-0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
+		glVertex2d(0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
+		glEnd();
+		glPopMatrix();
+	}
+
 	void updatePosition()
 	{
 		x += dx * FLAME_RATE / 1000.0;
@@ -64,36 +88,13 @@ public:
 
 Bird birds[BIRDS_NO];
 
-double radianToDegree(double rad)
-{
-	return rad * 180.0 / M_PI;
-}
-
-double degreeToRadian(double deg)
-{
-	return deg * M_PI / 180.0;
-}
-
-void drawBird(Bird bird) //TODO:鳥らしく
-{
-	glPushMatrix();
-	glTranslated(bird.x, bird.y, 0.0);
-	glRotated(radianToDegree(bird.angle), 0.0, 0.0, 1.0);
-	glBegin(GL_POLYGON);
-	glVertex2d(0.0, BIRD_SIZE);
-	glVertex2d(-0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
-	glVertex2d(0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, - BIRD_SIZE / 2.0);
-	glEnd();
-	glPopMatrix();
-}
-
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3d(1.0, 1.0, 1.0);
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		drawBird(birds[i]);
+		birds[i].drawBird();
 	}
 	glFlush();
 }
@@ -109,7 +110,7 @@ void timer(int value)
 {
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		birds[i].updatePosition(); //TODO:boidの次の時間ステップにおける速度ベクトルの計算
+		birds[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
 		if (time % 50 == 49)
 		{
 			birds[i].dx = (double(rand() % 3) - 1.0) * BIRD_SPEED;
@@ -140,7 +141,7 @@ int main(int argc, char* argv[])
 	init();
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * BOUNDARY / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * BOUNDARY / RAND_MAX, double(rand()) / RAND_MAX * 2.0 * M_PI);
+		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, double(rand()) / RAND_MAX * 2.0 * M_PI);
 	}
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
