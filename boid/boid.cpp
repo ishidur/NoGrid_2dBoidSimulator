@@ -8,16 +8,15 @@
 
 #define BIRD_SIZE 0.3 //size of bird
 #define BIRD_SPEED 2.0 //initial bird speed
-#define BIRDS_NO 30 //number of birds
+#define BIRDS_NO 70 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 10.0 //area boundary
-#define VIEW_ANGLE 30.0 //bird view angle: degree
-#define OPTIMUM_DISTANCE 5.0 //
+#define VIEW_ANGLE 320.0 //bird view angle: degree
+#define OPTIMUM_DISTANCE 5.0 //optimum distance
 #define GRAVITY_WEIGHT 0.1 //gravity point weight
-#define DISTANT_WEIGHT 1.0 //nearest bird weight
-#define ALIGNMENT_WEIGHT 0.8 //alignment weight
-#define ACCEL 1.1 //accelaration
+#define ALIGNMENT_WEIGHT 0.5 //alignment weight
+#define ACCEL 1.3 //accelaration
 #define MAXSPEED 5.0 //accelaration
 #define MINSPEED 1.0//accelaration
 
@@ -74,7 +73,7 @@ public:
 		angle = -atan(_x / _y);
 		if (_y < 0.0)
 		{
-			angle += M_PI;
+			angle += M_PI * 3.0 / 2.0;
 		}
 	}
 };
@@ -122,18 +121,63 @@ public:
 		angle = nextVector.angle;
 	}
 
-	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:Ž‹–ì‚ðÝ’è
+	bool visible(double viewAngle, Bird bird)
+	{
+		double dx = bird.x - x;
+		double dy = bird.y - y;
+		Vector bVector = Vector(dx, dy);
+		double maxAngle = angle + viewAngle;
+		double minAngle = angle - viewAngle;
+		bool max = maxAngle > 2.0 * M_PI ? bVector.angle > maxAngle - 2.0 * M_PI : bVector.angle > maxAngle;
+		bool min = minAngle < 0.0 ? bVector.angle < minAngle + 2.0 * M_PI : bVector.angle < minAngle;
+		if (max && min)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO], double xoffset = 0.0, double yoffset = 0.0) //TODO:Ž‹–ì‚ðÝ’è
 	{
 		Bird nearestBird;
 		double minDist = 0.0;
 		for (int i = 0; i < BIRDS_NO; i++) //TODO:ƒ‹[ƒv‚ðŽg‚í‚¸‚É’Tõ‚Å‚«‚é‚æ‚¤‚É‚µ‚½‚¢
 		{
-			double dist = calcDist(x, y, birds[i].x, birds[i].y);
-			if ((minDist == 0.0 || minDist >= dist) && dist != 0.0)
+			double dist = calcDist(x, y, birds[i].x + xoffset, birds[i].y + yoffset); //TODO:‹«ŠEðŒ‚Ì”½‰f
+			if (visible(viewAngle, birds[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
 				nearestBird = birds[i];
+				nearestBird.x += xoffset;
+				nearestBird.y += yoffset;
 				minDist = dist;
 			}
+		}
+		if (minDist == 0.0)
+		{
+			double x_off = 0.0;
+			double y_off = 0.0;
+			if (x > 0.0)
+			{
+				if (y > x)
+				{
+					y_off = BOUNDARY * 2.0;
+				}
+				else
+				{
+					x_off = BOUNDARY * 2.0;
+				}
+			}
+			else
+			{
+				if (x > y)
+				{
+					y_off = -BOUNDARY * 2.0;
+				}else
+				{
+					x_off = -BOUNDARY * 2.0;
+				}
+			}
+			nearestBird = findNearestBird(viewAngle, birds, x_off, y_off);
 		}
 		return nearestBird;
 	}
