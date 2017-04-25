@@ -17,6 +17,7 @@
 #define GRAVITY_WEIGHT 0.5 //gravity point weight
 #define DISTANT_WEIGHT 1.0 //nearest bird weight
 #define ALIGNMENT_WEIGHT 0.8 //alignment weight
+#define ACCEL 1.2 //accelaration
 
 int time = 0; //time
 
@@ -49,23 +50,50 @@ double calcDist(double x1, double y1, double x2, double y2)
 	return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
+class Vector
+{
+public:
+	double angle;
+	double x;
+	double y;
+
+//	Vector(double _angle)
+//	{
+//		angle = _angle;
+//		x = sin(_angle);
+//		y = cos(_angle);
+//	}
+
+	Vector(double _x, double _y)
+	{
+		double dist = sqrt(_x * _x + _y * _y);
+		x = _x / dist;
+		y = _y / dist;
+		angle = -atan(_x / _y);
+		if (_y < 0.0)
+		{
+			angle += M_PI * 3.0 / 2.0;
+		}
+	}
+};
+
 // TODO:Boidモデルの速度ベクトルの計算を実装
 class Bird
 {
 public:
-	double x; //x-position
+	double x; //_x-position
 	double y; //y-position
 	double angle; //radian angle: 0 vector is (0, 1)
-	double dx; // x-direction speed
-	double dy; // y-direction speed
+	Vector vector; // y-direction speed
+	double speed; // y-direction speed
 
-	Bird(double _x = 0.0, double _y = 0.0, double _angle = 0.0)
+	Bird(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = BIRD_SPEED)
 	{
 		x = _x;
 		y = _y;
 		angle = _angle;
-		dx = BIRD_SPEED * sin(_angle);
-		dy = BIRD_SPEED * cos(_angle);
+		speed = _speed;
+		vector = Vector(sin(_angle),cos(_angle));
 	}
 
 	void drawBird() //TODO:鳥らしく
@@ -83,6 +111,8 @@ public:
 
 	void updatePosition()
 	{
+		double dx = speed * vector.x;
+		double dy = speed * vector.y;
 		x += dx * FLAME_RATE / 1000.0;
 		y += dy * FLAME_RATE / 1000.0;
 		x = checkBoundary(x);
@@ -90,7 +120,7 @@ public:
 		angle = -atan(dx / dy);
 		if (dy < 0.0)
 		{
-			angle += M_PI;
+			angle += M_PI * 3.0 / 2.0;
 		}
 	}
 
@@ -101,10 +131,10 @@ public:
 		double direction = atan((bird.x - x) / (bird.y - y));
 		if ((bird.y - y) < 0.0)
 		{
-			direction += M_PI;
+			direction += M_PI * 3.0 / 2.0;
 		}
-		bool min = minView < -M_PI / 2.0 ? minView + 2.0 * M_PI <= direction : minView <= direction;
-		bool max = maxView > 3.0 * M_PI / 2.0 ? maxView - 2.0 * M_PI >= direction : maxView >= direction;
+		bool min = minView < 0.0 ? minView + 2.0 * M_PI <= direction : minView <= direction;
+		bool max = maxView > 2.0 * M_PI ? maxView - 2.0 * M_PI >= direction : maxView >= direction;
 		if (min && max)
 		{
 			return true;
@@ -166,21 +196,24 @@ void timer(int value)
 		double dist = calcDist(gx, gy, birds[i].x, birds[i].y);
 		double gvx = (gx - birds[i].x) / dist;
 		double gvy = (gy - birds[i].y) / dist;
+		Vector gVector = Vector(gvx, gvy);
 		Bird nearestBird = birds[i].findNearestBird(viewAngle, birds);
-		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
-		double nvx = (nearestBird.x - birds[i].x) / birdDist;
-		double nvy = (nearestBird.y - birds[i].y) / birdDist;
-		if (birdDist < OPTIMUM_DISTANCE)
-		{
-			nvx = -nvx;
-			nvy = -nvy;
-		}
-		double dv = calcDist(birds[i].dx, birds[i].dy, nearestBird.dx, nearestBird.dy);
-		double avx = (nearestBird.dx - birds[i].dx) / dv;
-		double avy = (nearestBird.dy - birds[i].dy) / dv;
-
-		birds[i].dx += GRAVITY_WEIGHT * gvx + DISTANT_WEIGHT * nvx + ALIGNMENT_WEIGHT * avx;
-		birds[i].dy += GRAVITY_WEIGHT * gvy + DISTANT_WEIGHT * nvy + ALIGNMENT_WEIGHT * avy;
+		Vector bSpeedVector = nearestBird.vector;
+		double vx = birds[i].vector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bSpeedVector.x;
+		double vy = birds[i].vector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * bSpeedVector.y;
+		birds[i].vector = Vector(vx, vy);
+//		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
+//		double nbx = (nearestBird.x - birds[i].x) / birdDist;
+//		double nby = (nearestBird.y - birds[i].y) / birdDist;
+//		Vector bVector = Vector(nbx, nby);
+//		if (birdDist < OPTIMUM_DISTANCE)
+//		{
+//			birds[i].speed /= ACCEL;
+//		}
+//		else if (birdDist > OPTIMUM_DISTANCE)
+//		{
+//			birds[i].speed *= ACCEL;
+//		}
 	}
 	//boid速度ベクトルの計算部分	}
 	glutPostRedisplay();
