@@ -13,11 +13,13 @@
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 10.0 //area boundary
 #define VIEW_ANGLE 30.0 //bird view angle: degree
-#define OPTIMUM_DISTANCE 2.0 //
-#define GRAVITY_WEIGHT 0.5 //gravity point weight
+#define OPTIMUM_DISTANCE 5.0 //
+#define GRAVITY_WEIGHT 0.1 //gravity point weight
 #define DISTANT_WEIGHT 1.0 //nearest bird weight
 #define ALIGNMENT_WEIGHT 0.8 //alignment weight
-#define ACCEL 1.2 //accelaration
+#define ACCEL 1.1 //accelaration
+#define MAXSPEED 5.0 //accelaration
+#define MINSPEED 1.0//accelaration
 
 int time = 0; //time
 
@@ -57,12 +59,12 @@ public:
 	double x;
 	double y;
 
-//	Vector(double _angle)
-//	{
-//		angle = _angle;
-//		x = sin(_angle);
-//		y = cos(_angle);
-//	}
+	Vector(double _angle)
+	{
+		angle = _angle;
+		x = -sin(_angle);
+		y = cos(_angle);
+	}
 
 	Vector(double _x, double _y)
 	{
@@ -72,7 +74,7 @@ public:
 		angle = -atan(_x / _y);
 		if (_y < 0.0)
 		{
-			angle += M_PI * 3.0 / 2.0;
+			angle += M_PI;
 		}
 	}
 };
@@ -84,8 +86,7 @@ public:
 	double x; //_x-position
 	double y; //y-position
 	double angle; //radian angle: 0 vector is (0, 1)
-	Vector vector; // y-direction speed
-	double speed; // y-direction speed
+	double speed; // vector
 
 	Bird(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = BIRD_SPEED)
 	{
@@ -93,7 +94,6 @@ public:
 		y = _y;
 		angle = _angle;
 		speed = _speed;
-		vector = Vector(sin(_angle),cos(_angle));
 	}
 
 	void drawBird() //TODO:鳥らしく
@@ -111,35 +111,15 @@ public:
 
 	void updatePosition()
 	{
+		Vector vector = Vector(angle);
 		double dx = speed * vector.x;
 		double dy = speed * vector.y;
 		x += dx * FLAME_RATE / 1000.0;
 		y += dy * FLAME_RATE / 1000.0;
 		x = checkBoundary(x);
 		y = checkBoundary(y);
-		angle = -atan(dx / dy);
-		if (dy < 0.0)
-		{
-			angle += M_PI * 3.0 / 2.0;
-		}
-	}
-
-	bool visible(Bird bird, double viewAngle)
-	{
-		double minView = angle - viewAngle;
-		double maxView = angle + viewAngle;
-		double direction = atan((bird.x - x) / (bird.y - y));
-		if ((bird.y - y) < 0.0)
-		{
-			direction += M_PI * 3.0 / 2.0;
-		}
-		bool min = minView < 0.0 ? minView + 2.0 * M_PI <= direction : minView <= direction;
-		bool max = maxView > 2.0 * M_PI ? maxView - 2.0 * M_PI >= direction : maxView >= direction;
-		if (min && max)
-		{
-			return true;
-		}
-		return false;
+		Vector nextVector = Vector(dx, dy);
+		angle = nextVector.angle;
 	}
 
 	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:視野を設定
@@ -167,6 +147,14 @@ void display(void)
 	glColor3d(1.0, 1.0, 1.0);
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
+		if (i == 0)
+		{
+			glColor3d(1.0, 0.0, 0.0);
+		}
+		else
+		{
+			glColor3d(1.0, 1.0, 1.0);
+		}
 		birds[i].drawBird();
 	}
 	glFlush();
@@ -198,24 +186,61 @@ void timer(int value)
 		double gvy = (gy - birds[i].y) / dist;
 		Vector gVector = Vector(gvx, gvy);
 		Bird nearestBird = birds[i].findNearestBird(viewAngle, birds);
-		Vector bSpeedVector = nearestBird.vector;
-		double vx = birds[i].vector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bSpeedVector.x;
-		double vy = birds[i].vector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * bSpeedVector.y;
-		birds[i].vector = Vector(vx, vy);
-//		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
-//		double nbx = (nearestBird.x - birds[i].x) / birdDist;
-//		double nby = (nearestBird.y - birds[i].y) / birdDist;
-//		Vector bVector = Vector(nbx, nby);
-//		if (birdDist < OPTIMUM_DISTANCE)
-//		{
-//			birds[i].speed /= ACCEL;
-//		}
-//		else if (birdDist > OPTIMUM_DISTANCE)
-//		{
-//			birds[i].speed *= ACCEL;
-//		}
+		Vector bSpeedVector = Vector(nearestBird.angle);
+		Vector thisBirdVector = Vector(birds[i].angle);
+		double vx = thisBirdVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bSpeedVector.x;
+		double vy = thisBirdVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * bSpeedVector.y;
+
+		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
+		double nbx = (nearestBird.x - birds[i].x) / birdDist;
+		double nby = (nearestBird.y - birds[i].y) / birdDist;
+		Vector bVector = Vector(nbx, nby);
+		double innerPrdct = thisBirdVector.x * bVector.x + thisBirdVector.y * bVector.y;
+		if (birdDist < OPTIMUM_DISTANCE)
+		{
+			if (innerPrdct > 0)
+			{
+				//front
+				birds[i].speed /= ACCEL;
+				if (birds[i].speed < MINSPEED)
+				{
+					birds[i].speed = MINSPEED;
+				}
+			}
+			else
+			{
+				//back
+				birds[i].speed *= ACCEL;
+				if (birds[i].speed > MAXSPEED)
+				{
+					birds[i].speed = MAXSPEED;
+				}
+			}
+		}
+		else if (birdDist > OPTIMUM_DISTANCE)
+		{
+			if (innerPrdct > 0)
+			{
+				//front
+				birds[i].speed *= ACCEL;
+				if (birds[i].speed > MAXSPEED)
+				{
+					birds[i].speed = MAXSPEED;
+				}
+			}
+			else
+			{
+				//back
+				birds[i].speed /= ACCEL;
+				if (birds[i].speed < MINSPEED)
+				{
+					birds[i].speed = MINSPEED;
+				}
+			}
+		}
+		birds[i].angle = Vector(vx, vy).angle;
 	}
-	//boid速度ベクトルの計算部分	}
+	//boid速度ベクトルの計算部分
 	glutPostRedisplay();
 	time++;
 	glutTimerFunc(FLAME_RATE, timer, time);
