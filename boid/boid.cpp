@@ -15,11 +15,11 @@
 #define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //bird view angle: degree
 #define OPTIMUM_DISTANCE 10.0 //optimum distance
-#define GRAVITY_WEIGHT 0.05 //gravity point weight
-#define ALIGNMENT_WEIGHT 0.1 //alignment weight
+#define GRAVITY_WEIGHT 0.1 //gravity point weight
+#define ALIGNMENT_WEIGHT 0.2 //alignment weight
 #define REPEL_WEIGHT 0.5 //repel force weight
-#define ACCEL 1.2 //accelaration
-#define MAXSPEED 5.0 //accelaration
+#define ACCEL 1.3 //accelaration
+#define MAXSPEED 8.0 //accelaration
 #define MINSPEED 1.0//accelaration
 
 int time = 0; //time
