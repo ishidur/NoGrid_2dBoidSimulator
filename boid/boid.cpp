@@ -6,17 +6,17 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#define BIRD_SIZE 0.3 //size of bird
-#define BLOCK_SIZE 0.5 //size of block
-#define BIRD_SPEED 2.0 //initial bird speed
+#define BIRD_SIZE 0.5 //size of bird
+#define BLOCK_SIZE 0.3 //size of block
+#define BIRD_SPEED 3.0 //initial bird speed
 #define BIRDS_NO 50 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //bird view angle: degree
 #define OPTIMUM_DISTANCE 10.0 //optimum distance
-#define GRAVITY_WEIGHT 0.1 //gravity point weight
-#define ALIGNMENT_WEIGHT 0.5 //alignment weight
+#define GRAVITY_WEIGHT 0.05 //gravity point weight
+#define ALIGNMENT_WEIGHT 0.1 //alignment weight
 #define REPEL_WEIGHT 0.5 //repel force weight
 #define ACCEL 1.2 //accelaration
 #define MAXSPEED 5.0 //accelaration
@@ -84,7 +84,6 @@ public:
 	}
 };
 
-// TODO:Boidモデルの速度ベクトルの計算を実装
 class Bird
 {
 public:
@@ -137,6 +136,11 @@ public:
 
 	bool visible(double viewAngle, Bird bird)
 	{
+		double r = BOUNDARY / 2.0;
+		if (r < calcDist(x, y, bird.x, bird.y))
+		{
+			return false;
+		}
 		double dx = bird.x - x;
 		double dy = bird.y - y;
 		Vector bVector = Vector(dx, dy);
@@ -151,13 +155,13 @@ public:
 		return true;
 	}
 
-	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:視野を設定
+	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:見つからない時の処理
 	{
-		Bird nearestBird;
+		Bird nearestBird = Bird(BOUNDARY * 2.0, BOUNDARY * 2.0);
 		double minDist = 0.0;
 		for (int i = 0; i < BIRDS_NO; i++) //TODO:ループを使わずに探索できるようにしたい
 		{
-			double dist = calcDist(x, y, birds[i].x, birds[i].y); //TODO:境界条件の反映
+			double dist = calcDist(x, y, birds[i].x, birds[i].y);
 			if (visible(viewAngle, birds[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
 				nearestBird = birds[i];
@@ -165,6 +169,105 @@ public:
 			}
 		}
 		return nearestBird;
+	}
+
+	void updateAngleAndSpeed(double gx, double gy, double viewAngle, Bird birds[BIRDS_NO])
+	{
+		double dist = calcDist(gx, gy, x, y);
+		double gvx = (gx - x) / dist;
+		double gvy = (gy - y) / dist;
+		Vector gVector = Vector(gvx, gvy);
+		Bird nearestBird = findNearestBird(viewAngle, birds);
+		Vector bSpeedVector = Vector(nearestBird.angle);
+		Vector thisBirdVector = Vector(angle);
+		double x_repel;
+		double y_repel;
+		double bx = nearestBird.x == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.x;
+		double by = nearestBird.y == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.y;
+		double vx = thisBirdVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bx;
+		double vy = thisBirdVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * by;
+		//		double vx = thisBirdVector.x;
+		//		double vy = thisBirdVector.y;
+		if (x >= BOUNDARY - OPTIMUM_DISTANCE)
+		{
+			x_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - x);
+			vx += REPEL_WEIGHT * x_repel;
+		}
+		else if (x <= -BOUNDARY + OPTIMUM_DISTANCE)
+		{
+			x_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + x);
+			vx += REPEL_WEIGHT * x_repel;
+		}
+		if (y >= BOUNDARY - OPTIMUM_DISTANCE)
+		{
+			y_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - y);
+			vy += REPEL_WEIGHT * y_repel;
+		}
+		else if (y <= -BOUNDARY + OPTIMUM_DISTANCE)
+		{
+			y_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + y);
+			vy += REPEL_WEIGHT * y_repel;
+		}
+		if (nearestBird.x != BOUNDARY * 2.0)
+		{
+			double birdDist = calcDist(nearestBird.x, nearestBird.y, x, y);
+			double nbx = (nearestBird.x - x) / birdDist;
+			double nby = (nearestBird.y - y) / birdDist;
+
+			Vector bVector = Vector(nbx, nby);
+			double innerPrdct = thisBirdVector.x * bVector.x + thisBirdVector.y * bVector.y;
+			if (birdDist < OPTIMUM_DISTANCE)
+			{
+				if (innerPrdct > 0)
+				{
+					//front
+					speed /= ACCEL;
+					if (speed < MINSPEED)
+					{
+						speed = MINSPEED;
+					}
+				}
+				else
+				{
+					//back
+					speed *= ACCEL;
+					if (speed > MAXSPEED)
+					{
+						speed = MAXSPEED;
+					}
+				}
+			}
+			else if (birdDist > OPTIMUM_DISTANCE)
+			{
+				if (innerPrdct > 0)
+				{
+					//front
+					speed *= ACCEL;
+					if (speed > MAXSPEED)
+					{
+						speed = MAXSPEED;
+					}
+				}
+				else
+				{
+					//back
+					speed /= ACCEL;
+					if (speed < MINSPEED)
+					{
+						speed = MINSPEED;
+					}
+				}
+			}
+		}
+
+
+		angle = Vector(vx, vy).angle;
+		//		if (i == 0)
+		//		{
+		//			printf("%.1f\n", radianToDegree(Vector(vx, vy).angle));
+		//			printf("[%.1f, %.1f]\n", vx, vy);
+		//			printf("[%.1f, %.1f]\n", x, y);
+		//		}
 	}
 };
 
@@ -232,96 +335,7 @@ void timer(int value)
 	double viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
 	for (int i = 0; i < BIRDS_NO; ++i)
 	{
-		double dist = calcDist(gx, gy, birds[i].x, birds[i].y);
-		double gvx = (gx - birds[i].x) / dist;
-		double gvy = (gy - birds[i].y) / dist;
-		Vector gVector = Vector(gvx, gvy);
-		Bird nearestBird = birds[i].findNearestBird(viewAngle, birds);
-		Vector bSpeedVector = Vector(nearestBird.angle);
-		Vector thisBirdVector = Vector(birds[i].angle);
-		double x_repel = 0.0;
-		double y_repel = 0.0;
-
-		double vx = thisBirdVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bSpeedVector.x;
-		double vy = thisBirdVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * bSpeedVector.y;
-		//		double vx = thisBirdVector.x;
-		//		double vy = thisBirdVector.y;
-		if (birds[i].x >= BOUNDARY - OPTIMUM_DISTANCE)
-		{
-			x_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - birds[i].x);
-			vx += REPEL_WEIGHT * x_repel;
-		}
-		else if (birds[i].x <= -BOUNDARY + OPTIMUM_DISTANCE)
-		{
-			x_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + birds[i].x);
-			vx += REPEL_WEIGHT * x_repel;
-		}
-		if (birds[i].y >= BOUNDARY - OPTIMUM_DISTANCE)
-		{
-			y_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - birds[i].y);
-			vy += REPEL_WEIGHT * y_repel;
-		}
-		else if (birds[i].y <= -BOUNDARY + OPTIMUM_DISTANCE)
-		{
-			y_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + birds[i].y);
-			vy += REPEL_WEIGHT * y_repel;
-		}
-
-		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
-		double nbx = (nearestBird.x - birds[i].x) / birdDist;
-		double nby = (nearestBird.y - birds[i].y) / birdDist;
-
-		Vector bVector = Vector(nbx, nby);
-		double innerPrdct = thisBirdVector.x * bVector.x + thisBirdVector.y * bVector.y;
-		if (birdDist < OPTIMUM_DISTANCE)
-		{
-			if (innerPrdct > 0)
-			{
-				//front
-				birds[i].speed /= ACCEL;
-				if (birds[i].speed < MINSPEED)
-				{
-					birds[i].speed = MINSPEED;
-				}
-			}
-			else
-			{
-				//back
-				birds[i].speed *= ACCEL;
-				if (birds[i].speed > MAXSPEED)
-				{
-					birds[i].speed = MAXSPEED;
-				}
-			}
-		}
-		else if (birdDist > OPTIMUM_DISTANCE)
-		{
-			if (innerPrdct > 0)
-			{
-				//front
-				birds[i].speed *= ACCEL;
-				if (birds[i].speed > MAXSPEED)
-				{
-					birds[i].speed = MAXSPEED;
-				}
-			}
-			else
-			{
-				//back
-				birds[i].speed /= ACCEL;
-				if (birds[i].speed < MINSPEED)
-				{
-					birds[i].speed = MINSPEED;
-				}
-			}
-		}
-		birds[i].angle = Vector(vx, vy).angle;
-		//		if (i == 0)
-		//		{
-		//			printf("%.1f\n", radianToDegree(Vector(vx, vy).angle));
-		//			printf("[%.1f, %.1f]\n", vx, vy);
-		//			printf("[%.1f, %.1f]\n", birds[i].x, birds[i].y);
-		//		}
+		birds[i].updateAngleAndSpeed(gx, gy, viewAngle, birds);
 	}
 	//boid速度ベクトルの計算部分
 	glutPostRedisplay();
