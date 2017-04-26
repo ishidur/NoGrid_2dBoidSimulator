@@ -1,6 +1,8 @@
 // boid.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
 //
 
+//TODO: 群れを複数にできるようにしたい
+//TODO: 捕食者
 #include "stdafx.h"
 #include <GL/glut.h>
 #define _USE_MATH_DEFINES
