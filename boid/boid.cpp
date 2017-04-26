@@ -12,13 +12,13 @@
 #define BIRDS_NO 50 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
-#define BOUNDARY 15.0 //area boundary
+#define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //bird view angle: degree
 #define OPTIMUM_DISTANCE 10.0 //optimum distance
-#define GRAVITY_WEIGHT 0.05 //gravity point weight
+#define GRAVITY_WEIGHT 0.1 //gravity point weight
 #define ALIGNMENT_WEIGHT 0.5 //alignment weight
-#define REPEL_WEIGHT 0.8 //repel force weight
-#define ACCEL 1.1 //accelaration
+#define REPEL_WEIGHT 0.5 //repel force weight
+#define ACCEL 1.2 //accelaration
 #define MAXSPEED 5.0 //accelaration
 #define MINSPEED 1.0//accelaration
 
@@ -103,6 +103,14 @@ public:
 
 	void drawBird() //TODO:鳥らしく
 	{
+		if (false)
+		{
+			glColor3d(1.0, 0.0, 0.0);
+		}
+		else
+		{
+			glColor3d(1.0, 1.0, 1.0);
+		}
 		glPushMatrix();
 		glTranslated(x, y, 0.0);
 		glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
@@ -162,20 +170,42 @@ public:
 
 Bird birds[BIRDS_NO];
 
+void drawWall()
+{
+	glColor3d(0.5, 0.5, 0.5);
+	double boundary = BOUNDARY;
+	glBegin(GL_POLYGON);
+	glVertex2d(boundary, boundary);
+	glVertex2d(boundary - BLOCK_SIZE, boundary);
+	glVertex2d(boundary - BLOCK_SIZE, -boundary);
+	glVertex2d(boundary, -boundary);
+	glEnd();
+	glBegin(GL_POLYGON);
+	glVertex2d(boundary, boundary);
+	glVertex2d(boundary, boundary - BLOCK_SIZE);
+	glVertex2d(-boundary, boundary - BLOCK_SIZE);
+	glVertex2d(-boundary, boundary);
+	glEnd();
+	glBegin(GL_POLYGON);
+	glVertex2d(-boundary, -boundary);
+	glVertex2d(-boundary, -boundary + BLOCK_SIZE);
+	glVertex2d(boundary, -boundary + BLOCK_SIZE);
+	glVertex2d(boundary, -boundary);
+	glEnd();
+	glBegin(GL_POLYGON);
+	glVertex2d(-boundary, -boundary);
+	glVertex2d(-boundary + BLOCK_SIZE, -boundary);
+	glVertex2d(-boundary + BLOCK_SIZE, boundary);
+	glVertex2d(-boundary, boundary);
+	glEnd();
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3d(1.0, 1.0, 1.0);
+	drawWall();
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		if (i == 0)
-		{
-			glColor3d(1.0, 0.0, 0.0);
-		}
-		else
-		{
-			glColor3d(1.0, 1.0, 1.0);
-		}
 		birds[i].drawBird();
 	}
 	glFlush();
@@ -218,22 +248,22 @@ void timer(int value)
 		//		double vy = thisBirdVector.y;
 		if (birds[i].x >= BOUNDARY - OPTIMUM_DISTANCE)
 		{
-			x_repel = -OPTIMUM_DISTANCE / (BOUNDARY - birds[i].x);
+			x_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - birds[i].x);
 			vx += REPEL_WEIGHT * x_repel;
 		}
 		else if (birds[i].x <= -BOUNDARY + OPTIMUM_DISTANCE)
 		{
-			x_repel = OPTIMUM_DISTANCE / (BOUNDARY + birds[i].x);
+			x_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + birds[i].x);
 			vx += REPEL_WEIGHT * x_repel;
 		}
 		if (birds[i].y >= BOUNDARY - OPTIMUM_DISTANCE)
 		{
-			y_repel = -OPTIMUM_DISTANCE / (BOUNDARY - birds[i].y);
+			y_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - birds[i].y);
 			vy += REPEL_WEIGHT * y_repel;
 		}
 		else if (birds[i].y <= -BOUNDARY + OPTIMUM_DISTANCE)
 		{
-			y_repel = OPTIMUM_DISTANCE / (BOUNDARY + birds[i].y);
+			y_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + birds[i].y);
 			vy += REPEL_WEIGHT * y_repel;
 		}
 
@@ -286,10 +316,12 @@ void timer(int value)
 			}
 		}
 		birds[i].angle = Vector(vx, vy).angle;
-//		if (i == 0)
-//		{
-//			printf("%.1f\n", radianToDegree(Vector(vx, vy).angle));
-//		}
+		//		if (i == 0)
+		//		{
+		//			printf("%.1f\n", radianToDegree(Vector(vx, vy).angle));
+		//			printf("[%.1f, %.1f]\n", vx, vy);
+		//			printf("[%.1f, %.1f]\n", birds[i].x, birds[i].y);
+		//		}
 	}
 	//boid速度ベクトルの計算部分
 	glutPostRedisplay();
@@ -312,7 +344,7 @@ int main(int argc, char* argv[])
 	init();
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI);
+		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI);
 		//		birds[i] = Bird(posX, posY, initAngle / 180.0 * M_PI);
 	}
 	glutDisplayFunc(display);
