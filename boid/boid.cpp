@@ -7,31 +7,37 @@
 #include <cmath>
 
 #define BIRD_SIZE 0.3 //size of bird
+#define BLOCK_SIZE 0.5 //size of block
 #define BIRD_SPEED 2.0 //initial bird speed
-#define BIRDS_NO 70 //number of birds
+#define BIRDS_NO 50 //number of birds
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
-#define BOUNDARY 10.0 //area boundary
-#define VIEW_ANGLE 320.0 //bird view angle: degree
-#define OPTIMUM_DISTANCE 5.0 //optimum distance
-#define GRAVITY_WEIGHT 0.1 //gravity point weight
+#define BOUNDARY 15.0 //area boundary
+#define VIEW_ANGLE 360.0 //bird view angle: degree
+#define OPTIMUM_DISTANCE 10.0 //optimum distance
+#define GRAVITY_WEIGHT 0.05 //gravity point weight
 #define ALIGNMENT_WEIGHT 0.5 //alignment weight
-#define ACCEL 1.3 //accelaration
+#define REPEL_WEIGHT 0.8 //repel force weight
+#define ACCEL 1.1 //accelaration
 #define MAXSPEED 5.0 //accelaration
 #define MINSPEED 1.0//accelaration
 
 int time = 0; //time
+//For debug
+//double posX = 0.0;
+//double posY = 5.0;
+//double initAngle = 90.0;
 
-//ŽüŠú“I‹«ŠEðŒ
+//‹«ŠEðŒ: •Ç
 double checkBoundary(double pos)
 {
-	if (pos > BOUNDARY)
+	if (pos > BOUNDARY - BLOCK_SIZE)
 	{
-		pos -= BOUNDARY * 2.0;
+		pos = BOUNDARY - BLOCK_SIZE;
 	}
-	else if (pos < -BOUNDARY)
+	else if (pos < -BOUNDARY + BLOCK_SIZE)
 	{
-		pos += BOUNDARY * 2.0;
+		pos = -BOUNDARY + BLOCK_SIZE;
 	}
 	return pos;
 }
@@ -70,10 +76,10 @@ public:
 		double dist = sqrt(_x * _x + _y * _y);
 		x = _x / dist;
 		y = _y / dist;
-		angle = -atan(_x / _y);
+		angle = atan(-_x / _y);
 		if (_y < 0.0)
 		{
-			angle += M_PI * 3.0 / 2.0;
+			angle += M_PI;
 		}
 	}
 };
@@ -137,47 +143,18 @@ public:
 		return true;
 	}
 
-	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO], double xoffset = 0.0, double yoffset = 0.0) //TODO:Ž‹–ì‚ðÝ’è
+	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:Ž‹–ì‚ðÝ’è
 	{
 		Bird nearestBird;
 		double minDist = 0.0;
 		for (int i = 0; i < BIRDS_NO; i++) //TODO:ƒ‹[ƒv‚ðŽg‚í‚¸‚É’Tõ‚Å‚«‚é‚æ‚¤‚É‚µ‚½‚¢
 		{
-			double dist = calcDist(x, y, birds[i].x + xoffset, birds[i].y + yoffset); //TODO:‹«ŠEðŒ‚Ì”½‰f
+			double dist = calcDist(x, y, birds[i].x, birds[i].y); //TODO:‹«ŠEðŒ‚Ì”½‰f
 			if (visible(viewAngle, birds[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
 				nearestBird = birds[i];
-				nearestBird.x += xoffset;
-				nearestBird.y += yoffset;
 				minDist = dist;
 			}
-		}
-		if (minDist == 0.0)
-		{
-			double x_off = 0.0;
-			double y_off = 0.0;
-			if (x > 0.0)
-			{
-				if (y > x)
-				{
-					y_off = BOUNDARY * 2.0;
-				}
-				else
-				{
-					x_off = BOUNDARY * 2.0;
-				}
-			}
-			else
-			{
-				if (x > y)
-				{
-					y_off = -BOUNDARY * 2.0;
-				}else
-				{
-					x_off = -BOUNDARY * 2.0;
-				}
-			}
-			nearestBird = findNearestBird(viewAngle, birds, x_off, y_off);
 		}
 		return nearestBird;
 	}
@@ -232,12 +209,38 @@ void timer(int value)
 		Bird nearestBird = birds[i].findNearestBird(viewAngle, birds);
 		Vector bSpeedVector = Vector(nearestBird.angle);
 		Vector thisBirdVector = Vector(birds[i].angle);
+		double x_repel = 0.0;
+		double y_repel = 0.0;
+
 		double vx = thisBirdVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bSpeedVector.x;
 		double vy = thisBirdVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * bSpeedVector.y;
+		//		double vx = thisBirdVector.x;
+		//		double vy = thisBirdVector.y;
+		if (birds[i].x >= BOUNDARY - OPTIMUM_DISTANCE)
+		{
+			x_repel = -OPTIMUM_DISTANCE / (BOUNDARY - birds[i].x);
+			vx += REPEL_WEIGHT * x_repel;
+		}
+		else if (birds[i].x <= -BOUNDARY + OPTIMUM_DISTANCE)
+		{
+			x_repel = OPTIMUM_DISTANCE / (BOUNDARY + birds[i].x);
+			vx += REPEL_WEIGHT * x_repel;
+		}
+		if (birds[i].y >= BOUNDARY - OPTIMUM_DISTANCE)
+		{
+			y_repel = -OPTIMUM_DISTANCE / (BOUNDARY - birds[i].y);
+			vy += REPEL_WEIGHT * y_repel;
+		}
+		else if (birds[i].y <= -BOUNDARY + OPTIMUM_DISTANCE)
+		{
+			y_repel = OPTIMUM_DISTANCE / (BOUNDARY + birds[i].y);
+			vy += REPEL_WEIGHT * y_repel;
+		}
 
 		double birdDist = calcDist(nearestBird.x, nearestBird.y, birds[i].x, birds[i].y);
 		double nbx = (nearestBird.x - birds[i].x) / birdDist;
 		double nby = (nearestBird.y - birds[i].y) / birdDist;
+
 		Vector bVector = Vector(nbx, nby);
 		double innerPrdct = thisBirdVector.x * bVector.x + thisBirdVector.y * bVector.y;
 		if (birdDist < OPTIMUM_DISTANCE)
@@ -283,6 +286,10 @@ void timer(int value)
 			}
 		}
 		birds[i].angle = Vector(vx, vy).angle;
+//		if (i == 0)
+//		{
+//			printf("%.1f\n", radianToDegree(Vector(vx, vy).angle));
+//		}
 	}
 	//boid‘¬“xƒxƒNƒgƒ‹‚ÌŒvŽZ•”•ª
 	glutPostRedisplay();
@@ -305,7 +312,8 @@ int main(int argc, char* argv[])
 	init();
 	for (int i = 0; i < BIRDS_NO; i++)
 	{
-		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, double(rand()) / RAND_MAX * 2.0 * M_PI);
+		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * BOUNDARY * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI);
+		//		birds[i] = Bird(posX, posY, initAngle / 180.0 * M_PI);
 	}
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
