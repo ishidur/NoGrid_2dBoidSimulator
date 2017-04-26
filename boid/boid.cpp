@@ -8,14 +8,14 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#define BIRD_SIZE 0.5 //size of bird
+#define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
-#define BIRD_SPEED 3.0 //initial bird speed
-#define BIRDS_NO 50 //number of birds
+#define BOID_SPEED 3.0 //initial boid speed
+#define BOIDS_NO 50 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
-#define VIEW_ANGLE 360.0 //bird view angle: degree
+#define VIEW_ANGLE 360.0 //boid view angle: degree
 #define OPTIMUM_DISTANCE 10.0 //optimum distance
 #define GRAVITY_WEIGHT 0.1 //gravity point weight
 #define ALIGNMENT_WEIGHT 0.2 //alignment weight
@@ -86,7 +86,7 @@ public:
 	}
 };
 
-class Bird
+class Boid
 {
 public:
 	double x; //_x-position
@@ -94,7 +94,7 @@ public:
 	double angle; //radian angle: 0 vector is (0, 1)
 	double speed; // vector
 
-	Bird(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = BIRD_SPEED)
+	Boid(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = BOID_SPEED)
 	{
 		x = _x;
 		y = _y;
@@ -102,7 +102,7 @@ public:
 		speed = _speed;
 	}
 
-	void drawBird() //TODO:鳥らしく
+	void drawBoid() //TODO:鳥らしく
 	{
 		if (false)
 		{
@@ -116,9 +116,9 @@ public:
 		glTranslated(x, y, 0.0);
 		glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
 		glBegin(GL_POLYGON);
-		glVertex2d(0.0, BIRD_SIZE);
-		glVertex2d(-0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
-		glVertex2d(0.4 * BIRD_SIZE * sqrt(3.0) / 2.0, -BIRD_SIZE / 2.0);
+		glVertex2d(0.0, BOID_SIZE);
+		glVertex2d(-0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
+		glVertex2d(0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
 		glEnd();
 		glPopMatrix();
 	}
@@ -136,15 +136,15 @@ public:
 		angle = nextVector.angle;
 	}
 
-	bool visible(double viewAngle, Bird bird)
+	bool visible(double viewAngle, Boid boid)
 	{
 		double r = BOUNDARY / 2.0;
-		if (r < calcDist(x, y, bird.x, bird.y))
+		if (r < calcDist(x, y, boid.x, boid.y))
 		{
 			return false;
 		}
-		double dx = bird.x - x;
-		double dy = bird.y - y;
+		double dx = boid.x - x;
+		double dy = boid.y - y;
 		Vector bVector = Vector(dx, dy);
 		double maxAngle = angle + viewAngle;
 		double minAngle = angle - viewAngle;
@@ -157,39 +157,39 @@ public:
 		return true;
 	}
 
-	Bird findNearestBird(double viewAngle, Bird birds[BIRDS_NO]) //TODO:見つからない時の処理
+	Boid findNearestBoid(double viewAngle, Boid boids[BOIDS_NO]) //TODO:見つからない時の処理
 	{
-		Bird nearestBird = Bird(BOUNDARY * 2.0, BOUNDARY * 2.0);
+		Boid nearestBoid = Boid(BOUNDARY * 2.0, BOUNDARY * 2.0);
 		double minDist = 0.0;
-		for (int i = 0; i < BIRDS_NO; i++) //TODO:ループを使わずに探索できるようにしたい
+		for (int i = 0; i < BOIDS_NO; i++) //TODO:ループを使わずに探索できるようにしたい
 		{
-			double dist = calcDist(x, y, birds[i].x, birds[i].y);
-			if (visible(viewAngle, birds[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
+			double dist = calcDist(x, y, boids[i].x, boids[i].y);
+			if (visible(viewAngle, boids[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
-				nearestBird = birds[i];
+				nearestBoid = boids[i];
 				minDist = dist;
 			}
 		}
-		return nearestBird;
+		return nearestBoid;
 	}
 
-	void updateAngleAndSpeed(double gx, double gy, double viewAngle, Bird birds[BIRDS_NO])
+	void updateAngleAndSpeed(double gx, double gy, double viewAngle, Boid boids[BOIDS_NO])
 	{
 		double dist = calcDist(gx, gy, x, y);
 		double gvx = (gx - x) / dist;
 		double gvy = (gy - y) / dist;
 		Vector gVector = Vector(gvx, gvy);
-		Bird nearestBird = findNearestBird(viewAngle, birds);
-		Vector bSpeedVector = Vector(nearestBird.angle);
-		Vector thisBirdVector = Vector(angle);
+		Boid nearestBoid = findNearestBoid(viewAngle, boids);
+		Vector bSpeedVector = Vector(nearestBoid.angle);
+		Vector thisBoidVector = Vector(angle);
 		double x_repel;
 		double y_repel;
-		double bx = nearestBird.x == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.x;
-		double by = nearestBird.y == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.y;
-		double vx = thisBirdVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bx;
-		double vy = thisBirdVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * by;
-		//		double vx = thisBirdVector.x;
-		//		double vy = thisBirdVector.y;
+		double bx = nearestBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.x;
+		double by = nearestBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.y;
+		double vx = thisBoidVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bx;
+		double vy = thisBoidVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * by;
+		//		double vx = thisBoidVector.x;
+		//		double vy = thisBoidVector.y;
 		if (x >= BOUNDARY - OPTIMUM_DISTANCE)
 		{
 			x_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - x);
@@ -210,15 +210,15 @@ public:
 			y_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + y);
 			vy += REPEL_WEIGHT * y_repel;
 		}
-		if (nearestBird.x != BOUNDARY * 2.0)
+		if (nearestBoid.x != BOUNDARY * 2.0)
 		{
-			double birdDist = calcDist(nearestBird.x, nearestBird.y, x, y);
-			double nbx = (nearestBird.x - x) / birdDist;
-			double nby = (nearestBird.y - y) / birdDist;
+			double boidDist = calcDist(nearestBoid.x, nearestBoid.y, x, y);
+			double nbx = (nearestBoid.x - x) / boidDist;
+			double nby = (nearestBoid.y - y) / boidDist;
 
 			Vector bVector = Vector(nbx, nby);
-			double innerPrdct = thisBirdVector.x * bVector.x + thisBirdVector.y * bVector.y;
-			if (birdDist < OPTIMUM_DISTANCE)
+			double innerPrdct = thisBoidVector.x * bVector.x + thisBoidVector.y * bVector.y;
+			if (boidDist < OPTIMUM_DISTANCE)
 			{
 				if (innerPrdct > 0)
 				{
@@ -239,7 +239,7 @@ public:
 					}
 				}
 			}
-			else if (birdDist > OPTIMUM_DISTANCE)
+			else if (boidDist > OPTIMUM_DISTANCE)
 			{
 				if (innerPrdct > 0)
 				{
@@ -273,7 +273,7 @@ public:
 	}
 };
 
-Bird birds[BIRDS_NO];
+Boid boids[BOIDS_NO];
 
 void drawWall()
 {
@@ -309,9 +309,9 @@ void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	drawWall();
-	for (int i = 0; i < BIRDS_NO; i++)
+	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		birds[i].drawBird();
+		boids[i].drawBoid();
 	}
 	glFlush();
 }
@@ -326,18 +326,18 @@ void resize(int w, int h)
 void timer(int value)
 {
 	double gx = 0.0, gy = 0.0;
-	for (int i = 0; i < BIRDS_NO; i++)
+	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		birds[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
-		gx += birds[i].x;
-		gy += birds[i].y;
+		boids[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
+		gx += boids[i].x;
+		gy += boids[i].y;
 	}
-	gx /= double(BIRDS_NO);
-	gy /= double(BIRDS_NO);
+	gx /= double(BOIDS_NO);
+	gy /= double(BOIDS_NO);
 	double viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
-	for (int i = 0; i < BIRDS_NO; ++i)
+	for (int i = 0; i < BOIDS_NO; ++i)
 	{
-		birds[i].updateAngleAndSpeed(gx, gy, viewAngle, birds);
+		boids[i].updateAngleAndSpeed(gx, gy, viewAngle, boids);
 	}
 	//boid速度ベクトルの計算部分
 	glutPostRedisplay();
@@ -358,10 +358,10 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
 	init();
-	for (int i = 0; i < BIRDS_NO; i++)
+	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		birds[i] = Bird((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI);
-		//		birds[i] = Bird(posX, posY, initAngle / 180.0 * M_PI);
+		boids[i] = Boid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI);
+		//		boids[i] = Boid(posX, posY, initAngle / 180.0 * M_PI);
 	}
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
