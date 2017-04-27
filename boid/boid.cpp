@@ -3,6 +3,7 @@
 
 //TODO: 群れを複数にできるようにしたい
 //TODO: 捕食者
+//TODO: ファイルを分けたい
 #include "stdafx.h"
 #include <GL/glut.h>
 #define _USE_MATH_DEFINES
@@ -12,6 +13,7 @@
 #include <iostream>
 using namespace std;
 
+#define GRID_NO 15 //number of grid; boid can see around 1 grid
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
@@ -20,20 +22,20 @@ using namespace std;
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //boid view angle: degree
-#define OPTIMUM_DISTANCE 10.0 //optimum distance
-#define GRAVITY_WEIGHT 0.1 //gravity point weight
-#define ALIGNMENT_WEIGHT 0.2 //alignment weight
 #define REPEL_WEIGHT 0.5 //repel force weight
+
+#define OPTIMUM_DISTANCE 10.0 //optimum distance
+#define CENTRIPETAL_WEIGHT 0.1 //centripetal  weight
+#define ALIGNMENT_WEIGHT 0.2 //alignment weight
 #define ACCEL 1.3 //accelaration
-#define MAXSPEED 8.0 //accelaration
-#define MINSPEED 2.0//accelaration
-#define GRID_NO 15 //number of grid; boid can see around 1 grid
+#define MAXSPEED 8.0 //boid: max speed
+#define MINSPEED 2.0//boid: minimum speed
 
 int time = 0; //time
 //For debug
-double posX = 1.0;
-double posY = 1.0;
-double initAngle = 90.0;
+//double posX = 1.0;
+//double posY = 1.0;
+//double initAngle = 90.0;
 
 //境界条件: 壁
 double checkBoundary(double pos)
@@ -108,13 +110,13 @@ public:
 		bottom = _bottom;
 	}
 
-	void addBoidIndex(int index)
+	void addBoidByIndex(int index)
 	{
 		boidIndexes.push_back(index);
 		sort(boidIndexes.begin(), boidIndexes.end());
 	}
 
-	void deleteBoidIndex(int index)
+	void deleteBoidByIndex(int index)
 	{
 		if (find(boidIndexes.begin(), boidIndexes.end(), index) != boidIndexes.end())
 		{
@@ -123,7 +125,7 @@ public:
 		}
 	}
 
-	bool findBoidIndex(int index)
+	bool findBoidByIndex(int index)
 	{
 		if (find(boidIndexes.begin(), boidIndexes.end(), index) != boidIndexes.end())
 		{
@@ -136,7 +138,7 @@ public:
 Grid grids[GRID_NO][GRID_NO];
 
 //this function needs grids
-vector<int> getGridBoidIndex(int id, int grid_x, int grid_y)
+vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 {
 	vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
 	if (grid_y > 0)
@@ -177,6 +179,9 @@ vector<int> getGridBoidIndex(int id, int grid_x, int grid_y)
 	indexes.erase(result2, indexes.end());
 	return indexes;
 }
+
+//this needs for Biod::isVisible
+double viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
 
 class Boid
 {
@@ -236,7 +241,7 @@ public:
 		angle = nextDirection.angle;
 	}
 
-	bool visible(double viewAngle, Boid boid)
+	bool isVisible(Boid boid)
 	{
 		double dx = boid.x - x;
 		double dy = boid.y - y;
@@ -252,11 +257,11 @@ public:
 		return true;
 	}
 
-	Boid findNearestBoid(double viewAngle, vector<Boid> boids)
+	Boid findNearestBoid(vector<Boid> boids)
 	{
 		Boid nearestBoid;
 		double minDist = 0.0;
-		auto indexes = getGridBoidIndex(id, grid_x, grid_y);
+		auto indexes = getAroundGridBoids(id, grid_x, grid_y);
 		if (id == 0)
 		{
 			setColor(1.0, indexes.size() / double(BOIDS_NO / 2), 0.0);
@@ -264,7 +269,7 @@ public:
 		for (auto i: indexes)
 		{
 			double dist = calcDist(x, y, boids[i].x, boids[i].y);
-			if (visible(viewAngle, boids[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
+			if (isVisible(boids[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
 				nearestBoid = boids[i];
 				minDist = dist;
@@ -272,14 +277,15 @@ public:
 		}
 		return nearestBoid;
 	}
-
-	void updateAngleAndSpeed(double gx, double gy, double viewAngle, vector<Boid> boids)
+	
+	//it is too long
+	void updateAngleAndSpeed(double gx, double gy, vector<Boid> boids)
 	{
 		double dist = calcDist(gx, gy, x, y);
 		double gvx = (gx - x) / dist;
 		double gvy = (gy - y) / dist;
 		Direction gDirection = Direction(gvx, gvy);
-		Boid nearestBoid = findNearestBoid(viewAngle, boids);
+		Boid nearestBoid = findNearestBoid(boids);
 		Direction bSpeedDirection = Direction(nearestBoid.angle);
 		Direction thisBoidDirection = Direction(angle);
 		double repel;
@@ -290,8 +296,8 @@ public:
 			bx = 0.0;
 			by = 0.0;
 		}
-		double vx = thisBoidDirection.x + GRAVITY_WEIGHT * gDirection.x + ALIGNMENT_WEIGHT * bx;
-		double vy = thisBoidDirection.y + GRAVITY_WEIGHT * gDirection.y + ALIGNMENT_WEIGHT * by;
+		double vx = thisBoidDirection.x + CENTRIPETAL_WEIGHT * gDirection.x + ALIGNMENT_WEIGHT * bx;
+		double vy = thisBoidDirection.y + CENTRIPETAL_WEIGHT * gDirection.y + ALIGNMENT_WEIGHT * by;
 		//		double vx = thisBoidDirection.x;
 		//		double vy = thisBoidDirection.y;
 		if (x >= BOUNDARY - OPTIMUM_DISTANCE)
@@ -402,7 +408,7 @@ void drawWall()
 }
 
 //this function needs grids
-void createGrid()
+void createGrids()
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	double left;
@@ -431,7 +437,7 @@ void updateGrid()
 			{
 				if (boids[n].grid_y != i || boids[n].grid_x != j)
 				{
-					grids[i][j].deleteBoidIndex(n);
+					grids[i][j].deleteBoidByIndex(n);
 				}
 			}
 		}
@@ -465,7 +471,7 @@ void findGrid(int index, double x, double y)
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
 	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
-	grids[gridy][gridx].addBoidIndex(index);
+	grids[gridy][gridx].addBoidByIndex(index);
 	boids[index].grid_x = gridx;
 	boids[index].grid_y = gridy;
 }
@@ -503,10 +509,9 @@ void timer(int value)
 	updateGrid();
 	gx /= double(BOIDS_NO);
 	gy /= double(BOIDS_NO);
-	double viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		boids[i].updateAngleAndSpeed(gx, gy, viewAngle, boids);
+		boids[i].updateAngleAndSpeed(gx, gy, boids);
 	}
 	//boid速度ベクトルの計算部分
 	glutPostRedisplay();
@@ -527,7 +532,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
 	init();
-	createGrid();
+	createGrids();
 
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
