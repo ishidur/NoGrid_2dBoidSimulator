@@ -11,17 +11,17 @@
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 50 //number of boids
+#define BOIDS_NO 30 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //boid view angle: degree
-#define OPTIMUM_DISTANCE 10.0 //optimum distance
+#define OPTIMUM_DISTANCE 5.0 //optimum distance
 #define GRAVITY_WEIGHT 0.1 //gravity point weight
 #define ALIGNMENT_WEIGHT 0.2 //alignment weight
 #define REPEL_WEIGHT 0.5 //repel force weight
-#define ACCEL 1.3 //accelaration
-#define MAXSPEED 8.0 //accelaration
+#define ACCEL 1.2 //accelaration
+#define MAXSPEED 10.0 //accelaration
 #define MINSPEED 1.0//accelaration
 
 int time = 0; //time
@@ -182,8 +182,7 @@ public:
 		Boid nearestBoid = findNearestBoid(viewAngle, boids);
 		Vector bSpeedVector = Vector(nearestBoid.angle);
 		Vector thisBoidVector = Vector(angle);
-		double x_repel;
-		double y_repel;
+		double repel;
 		double bx = nearestBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.x;
 		double by = nearestBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.y;
 		double vx = thisBoidVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bx;
@@ -192,24 +191,25 @@ public:
 		//		double vy = thisBoidVector.y;
 		if (x >= BOUNDARY - OPTIMUM_DISTANCE)
 		{
-			x_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - x);
-			vx += REPEL_WEIGHT * x_repel;
+			repel = -1.0 / (BOUNDARY - BLOCK_SIZE - x);
+			vx += REPEL_WEIGHT * repel;
 		}
 		else if (x <= -BOUNDARY + OPTIMUM_DISTANCE)
 		{
-			x_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + x);
-			vx += REPEL_WEIGHT * x_repel;
+			repel = 1.0 / (BOUNDARY - BLOCK_SIZE + x);
+			vx += REPEL_WEIGHT * repel;
 		}
 		if (y >= BOUNDARY - OPTIMUM_DISTANCE)
 		{
-			y_repel = -1.0 / (BOUNDARY - BLOCK_SIZE - y);
-			vy += REPEL_WEIGHT * y_repel;
+			repel = -1.0 / (BOUNDARY - BLOCK_SIZE - y);
+			vy += REPEL_WEIGHT * repel;
 		}
 		else if (y <= -BOUNDARY + OPTIMUM_DISTANCE)
 		{
-			y_repel = 1.0 / (BOUNDARY - BLOCK_SIZE + y);
-			vy += REPEL_WEIGHT * y_repel;
+			repel = 1.0 / (BOUNDARY - BLOCK_SIZE + y);
+			vy += REPEL_WEIGHT * repel;
 		}
+
 		if (nearestBoid.x != BOUNDARY * 2.0)
 		{
 			double boidDist = calcDist(nearestBoid.x, nearestBoid.y, x, y);
@@ -220,7 +220,8 @@ public:
 			double innerPrdct = thisBoidVector.x * bVector.x + thisBoidVector.y * bVector.y;
 			if (boidDist < OPTIMUM_DISTANCE)
 			{
-				if (innerPrdct > 0)
+				//close
+				if (innerPrdct >= 0.0)
 				{
 					//front
 					speed /= ACCEL;
@@ -241,7 +242,8 @@ public:
 			}
 			else if (boidDist > OPTIMUM_DISTANCE)
 			{
-				if (innerPrdct > 0)
+				//far
+				if (innerPrdct >= 0.0)
 				{
 					//front
 					speed *= ACCEL;
