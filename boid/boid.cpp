@@ -15,7 +15,7 @@ using namespace std;
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 3 //number of boids
+#define BOIDS_NO 30 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
@@ -142,8 +142,8 @@ public:
 	double y; //y-position
 	double angle; //radian angle: 0 vector is (0, 1)
 	double speed; // vector
-	int grid_y;
-	int grid_x;
+	int grid_y = -1;
+	int grid_x = -1;
 
 	Boid(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = BOID_SPEED)
 	{
@@ -366,25 +366,30 @@ void createGrid()
 	}
 }
 
+void updateGrid()
+{
+	for (int i = 0; i < GRID_NO; i++)
+	{
+		for (int j = 0; j < GRID_NO; j++)
+		{
+			vector<int> indexes = grids[i][j].boidIndexes;
+			for (auto n : indexes)
+			{
+				if (boids[n].grid_y != i || boids[n].grid_x != j)
+				{
+					grids[i][j].deleteBoidIndex(n);
+				}
+			}
+		}
+	}
+}
+
 void findGrid(int index, double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
 	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
-	for (int i = 0; i < GRID_NO; ++i)
-	{
-		for (int j = 0; j < GRID_NO; ++j)
-		{
-			if (gridy == i && gridx == j)
-			{
-				grids[i][j].addBoidIndex(index);
-			}
-			else
-			{
-				grids[i][j].deleteBoidIndex(index);
-			}
-		}
-	}
+	grids[gridy][gridx].addBoidIndex(index);
 	boids[index].grid_x = gridx;
 	boids[index].grid_y = gridy;
 }
@@ -426,6 +431,7 @@ void resize(int w, int h)
 
 void timer(int value)
 {
+	printf("%d\n", time);
 	double gx = 0.0, gy = 0.0;
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
@@ -434,6 +440,7 @@ void timer(int value)
 		gy += boids[i].y;
 		findGrid(i, boids[i].x, boids[i].y);
 	}
+	updateGrid();
 	gx /= double(BOIDS_NO);
 	gy /= double(BOIDS_NO);
 	double viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
@@ -468,7 +475,7 @@ int main(int argc, char* argv[])
 		//				boids[i] = Boid(posX, posY + i, initAngle / 180.0 * M_PI);
 		findGrid(i, boids[i].x, boids[i].y);
 	}
-
+	updateGrid();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
 	glutTimerFunc(FLAME_RATE, timer, time);
