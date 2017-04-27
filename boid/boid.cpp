@@ -15,7 +15,7 @@ using namespace std;
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 2 //number of boids
+#define BOIDS_NO 30 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
@@ -214,12 +214,34 @@ public:
 	{
 		Boid nearestBoid = Boid(BOUNDARY * 2.0, BOUNDARY * 2.0);
 		double minDist = 0.0;
-		for (auto boid:boids) //TODO:ÉãÅ[ÉvÇégÇÌÇ∏Ç…íTçıÇ≈Ç´ÇÈÇÊÇ§Ç…ÇµÇΩÇ¢
+		vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
+		if (grid_x > 0)
 		{
-			double dist = calcDist(x, y, boid.x, boid.y);
-			if (visible(viewAngle, boid) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
+			indexes.insert(indexes.end(), grids[grid_y + 1][grid_x].boidIndexes.begin(), grids[grid_y + 1][grid_x].boidIndexes.end());
+		}
+		if (grid_x < GRID_NO - 1)
+		{
+			indexes.insert(indexes.end(), grids[grid_y - 1][grid_x].boidIndexes.begin(), grids[grid_y - 1][grid_x].boidIndexes.end());
+		}
+		if (grid_y > 0)
+		{
+			indexes.insert(indexes.end(), grids[grid_y][grid_x + 1].boidIndexes.begin(), grids[grid_y][grid_x + 1].boidIndexes.end());
+		}
+		if (grid_y < GRID_NO - 1)
+		{
+			indexes.insert(indexes.end(), grids[grid_y][grid_x - 1].boidIndexes.begin(), grids[grid_y][grid_x - 1].boidIndexes.end());
+		}
+
+		auto result = remove(indexes.begin(), indexes.end(), id);
+		auto result2 = unique(indexes.begin(), result);
+		indexes.erase(result2, indexes.end());
+
+		for (auto i: indexes)
+		{
+			double dist = calcDist(x, y, boids[i].x, boids[i].y);
+			if (visible(viewAngle, boids[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
-				nearestBoid = boid;
+				nearestBoid = boids[i];
 				minDist = dist;
 			}
 		}
@@ -318,7 +340,6 @@ public:
 				}
 			}
 		}
-
 		angle = Direction(vx, vy).angle;
 	}
 };
