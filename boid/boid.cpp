@@ -13,18 +13,18 @@
 #include <iostream>
 using namespace std;
 
-#define GRID_NO 15 //number of grid; boid can see around 1 grid
+#define GRID_NO 10 //number of grid; boid can see around 1 grid
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 50 //number of boids
+#define BOIDS_NO 30 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //boid view angle: degree
-#define REPEL_WEIGHT 0.5 //repel force weight
+#define REPEL_WEIGHT 0.8 //repel force weight
 
-#define OPTIMUM_DISTANCE 10.0 //optimum distance
+#define OPTIMUM_DISTANCE 2.0*BOUNDARY/GRID_NO //optimum distance
 #define CENTRIPETAL_WEIGHT 0.1 //centripetal  weight
 #define ALIGNMENT_WEIGHT 0.2 //alignment weight
 #define ACCEL 1.3 //accelaration
@@ -66,7 +66,7 @@ double calcDist(double x1, double y1, double x2, double y2)
 	return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
-class Direction
+class Direction //-90 ~ 270deg
 {
 public:
 	double angle;
@@ -248,8 +248,8 @@ public:
 		Direction bDirection = Direction(dx, dy);
 		double maxAngle = angle + viewAngle;
 		double minAngle = angle - viewAngle;
-		bool max = maxAngle > 2.0 * M_PI ? bDirection.angle > maxAngle - 2.0 * M_PI : bDirection.angle > maxAngle;
-		bool min = minAngle < 0.0 ? bDirection.angle < minAngle + 2.0 * M_PI : bDirection.angle < minAngle;
+		bool max = maxAngle > 3.0 * M_PI / 2.0 ? bDirection.angle > maxAngle - 2.0 * M_PI : bDirection.angle > maxAngle;
+		bool min = minAngle < -M_PI / 2.0 ? bDirection.angle < minAngle + 2.0 * M_PI : bDirection.angle < minAngle;
 		if (max && min)
 		{
 			return false;
@@ -262,13 +262,24 @@ public:
 		Boid nearestBoid;
 		double minDist = 0.0;
 		auto indexes = getAroundGridBoids(id, grid_x, grid_y);
-		if (id == 0)
+		if (id != 0)
 		{
-			setColor(1.0, indexes.size() / double(BOIDS_NO / 2), 0.0);
+			setColor(1.0, 1.0, 1.0);
 		}
 		for (auto i: indexes)
 		{
 			double dist = calcDist(x, y, boids[i].x, boids[i].y);
+			if (i == 0 && isVisible(boids[i]))
+			{
+				if (dist > OPTIMUM_DISTANCE)
+				{
+					setColor(0.1, 0.1, 1.0);
+				}else
+				{
+					setColor(0.0, 1.0, 1.0);
+				}
+			}
+
 			if (isVisible(boids[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 			{
 				nearestBoid = boids[i];
@@ -277,25 +288,24 @@ public:
 		}
 		return nearestBoid;
 	}
-	
-	//it is too long
+
+	//TODO: it is too long
 	void updateAngleAndSpeed(double gx, double gy, vector<Boid> boids)
 	{
 		double dist = calcDist(gx, gy, x, y);
 		double gvx = (gx - x) / dist;
 		double gvy = (gy - y) / dist;
-		Vector gVector = Vector(gvx, gvy);
-		Boid nearestBoid = findNearestBoid(viewAngle, boids);
-		Vector bSpeedVector = Vector(nearestBoid.angle);
-		Vector thisBoidVector = Vector(angle);
-		double x_repel;
-		double y_repel;
-		double bx = nearestBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.x;
-		double by = nearestBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedVector.y;
-		double vx = thisBoidVector.x + GRAVITY_WEIGHT * gVector.x + ALIGNMENT_WEIGHT * bx;
-		double vy = thisBoidVector.y + GRAVITY_WEIGHT * gVector.y + ALIGNMENT_WEIGHT * by;
-		//		double vx = thisBoidVector.x;
-		//		double vy = thisBoidVector.y;
+		Direction gDirection = Direction(gvx, gvy);
+		Boid nearestBoid = findNearestBoid(boids);
+		Direction bSpeedDirection = Direction(nearestBoid.angle);
+		Direction thisBoidDirection = Direction(angle);
+		double repel;
+		double bx = nearestBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.x;
+		double by = nearestBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.y;
+		double vx = thisBoidDirection.x + CENTRIPETAL_WEIGHT * gDirection.x + ALIGNMENT_WEIGHT * bx;
+		double vy = thisBoidDirection.y + CENTRIPETAL_WEIGHT * gDirection.y + ALIGNMENT_WEIGHT * by;
+		//		double vx = thisBoidDirection.x;
+		//		double vy = thisBoidDirection.y;
 		if (x >= BOUNDARY - OPTIMUM_DISTANCE)
 		{
 			repel = -1.0 / (BOUNDARY - BLOCK_SIZE - x);
@@ -322,7 +332,7 @@ public:
 			double boidDist = calcDist(nearestBoid.x, nearestBoid.y, x, y);
 			double nbx = (nearestBoid.x - x) / boidDist;
 			double nby = (nearestBoid.y - y) / boidDist;
-
+			//TODO: 加減速正しい？
 			Direction bDirection = Direction(nbx, nby);
 			double innerPrdct = thisBoidDirection.x * bDirection.x + thisBoidDirection.y * bDirection.y;
 			if (boidDist < OPTIMUM_DISTANCE)
@@ -452,7 +462,7 @@ void coloringGrid()
 			glColor3d(double(i) / GRID_NO, double(j) / GRID_NO, 0.0);
 			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
 			{
-				glColor3d(0.0, 0.0, 1.0);
+				glColor3d(0.3, 0.3, 0.3);
 			}
 			glBegin(GL_POLYGON);
 			glVertex2d(grids[i][j].left, grids[i][j].top);
@@ -496,11 +506,14 @@ void resize(int w, int h)
 
 void timer(int value)
 {
-	//	printf("%d\n", time);
+	if (time % 10 == 0)
+	{
+		cout << time / 10 << endl;
+	}
 	double gx = 0.0, gy = 0.0;
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		boids[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
+		boids[i].updatePosition();
 		gx += boids[i].x;
 		gy += boids[i].y;
 		findGrid(i, boids[i].x, boids[i].y);
@@ -510,9 +523,9 @@ void timer(int value)
 	gy /= double(BOIDS_NO);
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
+		//boid速度ベクトルの計算部分
 		boids[i].updateAngleAndSpeed(gx, gy, boids);
 	}
-	//boid速度ベクトルの計算部分
 	glutPostRedisplay();
 	time++;
 	glutTimerFunc(FLAME_RATE, timer, time);
