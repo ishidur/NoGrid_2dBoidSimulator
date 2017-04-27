@@ -15,7 +15,7 @@ using namespace std;
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 30 //number of boids
+#define BOIDS_NO 50 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
@@ -26,8 +26,8 @@ using namespace std;
 #define REPEL_WEIGHT 0.5 //repel force weight
 #define ACCEL 1.3 //accelaration
 #define MAXSPEED 8.0 //accelaration
-#define MINSPEED 1.0//accelaration
-#define GRID_NO 8//number of grid
+#define MINSPEED 2.0//accelaration
+#define GRID_NO 15 //number of grid; boid can see around 1 grid
 
 int time = 0; //time
 //For debug
@@ -135,8 +135,55 @@ public:
 
 Grid grids[GRID_NO][GRID_NO];
 
+//this function needs grids
+vector<int> getGridBoidIndex(int id, int grid_x, int grid_y)
+{
+	vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
+	if (grid_y > 0)
+	{
+		indexes.insert(indexes.end(), grids[grid_y - 1][grid_x].boidIndexes.begin(), grids[grid_y - 1][grid_x].boidIndexes.end());
+		if (grid_x > 0)
+		{
+			indexes.insert(indexes.end(), grids[grid_y - 1][grid_x - 1].boidIndexes.begin(), grids[grid_y - 1][grid_x - 1].boidIndexes.end());
+		}
+		if (grid_x < GRID_NO - 1)
+		{
+			indexes.insert(indexes.end(), grids[grid_y - 1][grid_x + 1].boidIndexes.begin(), grids[grid_y - 1][grid_x + 1].boidIndexes.end());
+		}
+	}
+	if (grid_y < GRID_NO - 1)
+	{
+		indexes.insert(indexes.end(), grids[grid_y + 1][grid_x].boidIndexes.begin(), grids[grid_y + 1][grid_x].boidIndexes.end());
+		if (grid_x > 0)
+		{
+			indexes.insert(indexes.end(), grids[grid_y + 1][grid_x - 1].boidIndexes.begin(), grids[grid_y + 1][grid_x - 1].boidIndexes.end());
+		}
+		if (grid_x < GRID_NO - 1)
+		{
+			indexes.insert(indexes.end(), grids[grid_y + 1][grid_x + 1].boidIndexes.begin(), grids[grid_y + 1][grid_x + 1].boidIndexes.end());
+		}
+	}
+	if (grid_x > 0)
+	{
+		indexes.insert(indexes.end(), grids[grid_y][grid_x - 1].boidIndexes.begin(), grids[grid_y][grid_x - 1].boidIndexes.end());
+	}
+	if (grid_x < GRID_NO - 1)
+	{
+		indexes.insert(indexes.end(), grids[grid_y][grid_x + 1].boidIndexes.begin(), grids[grid_y][grid_x + 1].boidIndexes.end());
+	}
+
+	auto result = remove(indexes.begin(), indexes.end(), id);
+	auto result2 = unique(indexes.begin(), result);
+	indexes.erase(result2, indexes.end());
+	return indexes;
+}
+
 class Boid
 {
+private:
+	double r = 1.0; //color; red
+	double g = 1.0; //color; green
+	double b = 1.0; //color; blue
 public:
 	int id = -1; //id
 	double x; //_x-position
@@ -155,16 +202,16 @@ public:
 		speed = _speed;
 	}
 
+	void setColor(double red, double green, double blue)
+	{
+		r = red;
+		g = green;
+		b = blue;
+	}
+
 	void drawBoid() //TODO:íπÇÁÇµÇ≠
 	{
-		if (id == 0)
-		{
-			glColor3d(1.0, 0.0, 0.0);
-		}
-		else
-		{
-			glColor3d(1.0, 1.0, 1.0);
-		}
+		glColor3d(r, g, b);
 		glPushMatrix();
 		glTranslated(x, y, 0.0);
 		glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
@@ -191,11 +238,6 @@ public:
 
 	bool visible(double viewAngle, Boid boid)
 	{
-		double r = BOUNDARY / 2.0;
-		if (r < calcDist(x, y, boid.x, boid.y))
-		{
-			return false;
-		}
 		double dx = boid.x - x;
 		double dy = boid.y - y;
 		Direction bDirection = Direction(dx, dy);
@@ -210,32 +252,15 @@ public:
 		return true;
 	}
 
-	Boid findNearestBoid(double viewAngle, vector<Boid> boids) //TODO:å©Ç¬Ç©ÇÁÇ»Ç¢éûÇÃèàóù
+	Boid findNearestBoid(double viewAngle, vector<Boid> boids)
 	{
-		Boid nearestBoid = Boid(BOUNDARY * 2.0, BOUNDARY * 2.0);
+		Boid nearestBoid;
 		double minDist = 0.0;
-		vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
-		if (grid_x > 0)
+		auto indexes = getGridBoidIndex(id, grid_x, grid_y);
+		if (id == 0)
 		{
-			indexes.insert(indexes.end(), grids[grid_y + 1][grid_x].boidIndexes.begin(), grids[grid_y + 1][grid_x].boidIndexes.end());
+			setColor(1.0, indexes.size() / double(BOIDS_NO / 2), 0.0);
 		}
-		if (grid_x < GRID_NO - 1)
-		{
-			indexes.insert(indexes.end(), grids[grid_y - 1][grid_x].boidIndexes.begin(), grids[grid_y - 1][grid_x].boidIndexes.end());
-		}
-		if (grid_y > 0)
-		{
-			indexes.insert(indexes.end(), grids[grid_y][grid_x + 1].boidIndexes.begin(), grids[grid_y][grid_x + 1].boidIndexes.end());
-		}
-		if (grid_y < GRID_NO - 1)
-		{
-			indexes.insert(indexes.end(), grids[grid_y][grid_x - 1].boidIndexes.begin(), grids[grid_y][grid_x - 1].boidIndexes.end());
-		}
-
-		auto result = remove(indexes.begin(), indexes.end(), id);
-		auto result2 = unique(indexes.begin(), result);
-		indexes.erase(result2, indexes.end());
-
 		for (auto i: indexes)
 		{
 			double dist = calcDist(x, y, boids[i].x, boids[i].y);
@@ -376,6 +401,7 @@ void drawWall()
 	glEnd();
 }
 
+//this function needs grids
 void createGrid()
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
@@ -393,6 +419,7 @@ void createGrid()
 	}
 }
 
+//this function needs grids, boids
 void updateGrid()
 {
 	for (int i = 0; i < GRID_NO; i++)
@@ -411,19 +438,8 @@ void updateGrid()
 	}
 }
 
-void findGrid(int index, double x, double y)
+void coloringGrid()
 {
-	double width = 2.0 * BOUNDARY / GRID_NO;
-	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
-	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
-	grids[gridy][gridx].addBoidIndex(index);
-	boids[index].grid_x = gridx;
-	boids[index].grid_y = gridy;
-}
-
-void display(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT);
 	for (int i = 0; i < GRID_NO; ++i)
 	{
 		for (int j = 0; j < GRID_NO; ++j)
@@ -441,6 +457,23 @@ void display(void)
 			glEnd();
 		}
 	}
+}
+
+//this function needs grids, boids
+void findGrid(int index, double x, double y)
+{
+	double width = 2.0 * BOUNDARY / GRID_NO;
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
+	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
+	grids[gridy][gridx].addBoidIndex(index);
+	boids[index].grid_x = gridx;
+	boids[index].grid_y = gridy;
+}
+
+void display(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	coloringGrid();
 	drawWall();
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
@@ -501,6 +534,10 @@ int main(int argc, char* argv[])
 		boids.push_back(Boid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI,BOID_SPEED, i));
 		//		boids[i] = Boid(posX, posY + i, initAngle / 180.0 * M_PI,BOID_SPEED, i);
 		findGrid(i, boids[i].x, boids[i].y);
+		if (i == 0)
+		{
+			boids[i].setColor(1.0, 0.0, 0.0);
+		}
 	}
 	updateGrid();
 	glutDisplayFunc(display);
