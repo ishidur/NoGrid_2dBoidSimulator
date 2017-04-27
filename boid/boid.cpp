@@ -7,11 +7,15 @@
 #include <GL/glut.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+using namespace std;
 
 #define BOID_SIZE 0.5 //size of boid
 #define BLOCK_SIZE 0.3 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 50 //number of boids
+#define BOIDS_NO 3 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
@@ -23,12 +27,13 @@
 #define ACCEL 1.3 //accelaration
 #define MAXSPEED 8.0 //accelaration
 #define MINSPEED 1.0//accelaration
+#define GRID_NO 8//number of grid
 
 int time = 0; //time
 //For debug
-//double posX = 0.0;
-//double posY = 5.0;
-//double initAngle = 90.0;
+double posX = 1.0;
+double posY = 1.0;
+double initAngle = 90.0;
 
 //境界条件: 壁
 double checkBoundary(double pos)
@@ -86,6 +91,50 @@ public:
 	}
 };
 
+class Grid
+{
+public:
+	double left;
+	double right;
+	double top;
+	double bottom;
+	vector<int> boidIndexes;
+
+	Grid(double _top = 0.0, double _bottom = 0.0, double _left = 0.0, double _right = 0.0)
+	{
+		left = _left;
+		right = _right;
+		top = _top;
+		bottom = _bottom;
+	}
+
+	void addBoidIndex(int index)
+	{
+		boidIndexes.push_back(index);
+		sort(boidIndexes.begin(), boidIndexes.end());
+	}
+
+	void deleteBoidIndex(int index)
+	{
+		if (find(boidIndexes.begin(), boidIndexes.end(), index) != boidIndexes.end())
+		{
+			remove(boidIndexes.begin(), boidIndexes.end(), index);
+			boidIndexes.pop_back();
+		}
+	}
+
+	bool findBoidIndex(int index)
+	{
+		if (find(boidIndexes.begin(), boidIndexes.end(), index) != boidIndexes.end())
+		{
+			return true;
+		}
+		return false;
+	}
+};
+
+Grid grids[GRID_NO][GRID_NO];
+
 class Boid
 {
 public:
@@ -93,6 +142,8 @@ public:
 	double y; //y-position
 	double angle; //radian angle: 0 vector is (0, 1)
 	double speed; // vector
+	int grid_y;
+	int grid_x;
 
 	Boid(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = BOID_SPEED)
 	{
@@ -262,14 +313,7 @@ public:
 			}
 		}
 
-
 		angle = Vector(vx, vy).angle;
-		//		if (i == 0)
-		//		{
-		//			printf("%.1f\n", radianToDegree(Vector(vx, vy).angle));
-		//			printf("[%.1f, %.1f]\n", vx, vy);
-		//			printf("[%.1f, %.1f]\n", x, y);
-		//		}
 	}
 };
 
@@ -305,9 +349,66 @@ void drawWall()
 	glEnd();
 }
 
+void createGrid()
+{
+	double width = 2.0 * BOUNDARY / GRID_NO;
+	double left;
+	double top = BOUNDARY;
+	for (int i = 0; i < GRID_NO; ++i)
+	{
+		left = -BOUNDARY;
+		for (int j = 0; j < GRID_NO; ++j)
+		{
+			grids[i][j] = Grid(top, top - width, left, left + width);
+			left += width;
+		}
+		top -= width;
+	}
+}
+
+void findGrid(int index, double x, double y)
+{
+	double width = 2.0 * BOUNDARY / GRID_NO;
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
+	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
+	for (int i = 0; i < GRID_NO; ++i)
+	{
+		for (int j = 0; j < GRID_NO; ++j)
+		{
+			if (gridy == i && gridx == j)
+			{
+				grids[i][j].addBoidIndex(index);
+			}
+			else
+			{
+				grids[i][j].deleteBoidIndex(index);
+			}
+		}
+	}
+	boids[index].grid_x = gridx;
+	boids[index].grid_y = gridy;
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+	for (int i = 0; i < GRID_NO; ++i)
+	{
+		for (int j = 0; j < GRID_NO; ++j)
+		{
+			glColor3d(double(i) / GRID_NO, double(j) / GRID_NO, 0.0);
+			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
+			{
+				glColor3d(0.0, 0.0, 1.0);
+			}
+			glBegin(GL_POLYGON);
+			glVertex2d(grids[i][j].left, grids[i][j].top);
+			glVertex2d(grids[i][j].left, grids[i][j].bottom);
+			glVertex2d(grids[i][j].right, grids[i][j].bottom);
+			glVertex2d(grids[i][j].right, grids[i][j].top);
+			glEnd();
+		}
+	}
 	drawWall();
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
@@ -331,6 +432,7 @@ void timer(int value)
 		boids[i].updatePosition(); //TODO:次の時間ステップにおける速度ベクトルの計算
 		gx += boids[i].x;
 		gy += boids[i].y;
+		findGrid(i, boids[i].x, boids[i].y);
 	}
 	gx /= double(BOIDS_NO);
 	gy /= double(BOIDS_NO);
@@ -358,11 +460,15 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
 	init();
+	createGrid();
+
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
 		boids[i] = Boid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI);
-		//		boids[i] = Boid(posX, posY, initAngle / 180.0 * M_PI);
+		//				boids[i] = Boid(posX, posY + i, initAngle / 180.0 * M_PI);
+		findGrid(i, boids[i].x, boids[i].y);
 	}
+
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
 	glutTimerFunc(FLAME_RATE, timer, time);
