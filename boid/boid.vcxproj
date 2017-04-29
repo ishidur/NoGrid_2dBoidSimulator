@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseBoid.h" />
+    <ClInclude Include="Block.h" />
     <ClInclude Include="Direction.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="parameters.h" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseBoid.cpp" />
+    <ClCompile Include="Block.cpp" />
     <ClCompile Include="Direction.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Grid.cpp" />

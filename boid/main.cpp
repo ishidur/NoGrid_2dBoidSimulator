@@ -15,6 +15,7 @@
 #include "BaseBoid.h"
 #include "Direction.h"
 #include "Point.h"
+#include "Block.h"
 #include "parameters.h" //import common parameters
 using namespace std;
 
@@ -31,36 +32,6 @@ double calcDist(double x1, double y1, double x2, double y2)
 }
 
 Grid grids[GRID_NO][GRID_NO];
-
-class Block
-{
-public:
-	double x; //center x
-	double y; //center y
-	double r; //radius
-	Block(double _x, double _y, double _r)
-	{
-		x = _x;
-		y = _y;
-		r = _r;
-	}
-
-	void drawBlock()
-	{
-		int n = 20;
-		double angl = 2.0 * M_PI / n;
-		glColor3d(0.5, 0.5, 0.5);
-		glPushMatrix();
-		glTranslated(x, y, 0.0);
-		glBegin(GL_POLYGON);
-		for (int i = 0; i < n; ++i)
-		{
-			glVertex2d(r * cos(double(i) * angl), r * sin(double(i) * angl));
-		}
-		glEnd();
-		glPopMatrix();
-	}
-};
 
 vector<Block> blocks;
 
@@ -392,6 +363,22 @@ void whereBlock(int index, double x, double y)
 	}
 }
 
+bool findDuplicateBlock(double x, double y)
+{
+	double width = 2.0 * BOUNDARY / GRID_NO;
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
+	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
+	for (auto i: grids[gridy][gridx].blockIndexes)
+	{
+		double dist = calcDist(x, y, blocks[i].x, blocks[i].y);
+		if (dist <= 2.0 * BLOCK_SIZE)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -421,8 +408,15 @@ void mouse(int button, int state, int x, int y)
 	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 	{
-		blocks.push_back(Block(pos_x, pos_y, BLOCK_SIZE));
-		whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
+		if (findDuplicateBlock(pos_x, pos_y))
+		{
+			cout << "exist" << endl;
+		}
+		else
+		{
+			blocks.push_back(Block(pos_x, pos_y, BLOCK_SIZE));
+			whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
+		}
 	}
 }
 

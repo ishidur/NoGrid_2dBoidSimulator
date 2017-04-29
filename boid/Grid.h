@@ -24,4 +24,5 @@ public:
 	void deleteBoidByIndex(int index);
 	bool findBoidByIndex(int index);
 	void addBlockByIndex(int index);
+	void deleteBlockByIndex(int index);
 };

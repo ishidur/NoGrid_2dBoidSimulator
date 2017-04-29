@@ -34,3 +34,11 @@ void Grid::addBlockByIndex(int index)
 	blockIndexes.push_back(index);
 	sort(blockIndexes.begin(), blockIndexes.end());
 }
+void Grid::deleteBlockByIndex(int index)
+{
+	if (find(blockIndexes.begin(), blockIndexes.end(), index) != blockIndexes.end())
+	{
+		remove(blockIndexes.begin(), blockIndexes.end(), index);
+		blockIndexes.pop_back();
+	}
+}

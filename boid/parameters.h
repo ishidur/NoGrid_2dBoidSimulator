@@ -7,7 +7,7 @@
 #define BLOCK_SIZE 1.0 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
 #define BOIDS_NO 30 //number of boids
-#define BLOCK_NO 2 //number of boids
+#define BLOCK_NO 0 //number of boids
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 20.0 //area boundary
