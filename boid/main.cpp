@@ -4,6 +4,9 @@
 //TODO: 群れを複数にできるようにしたい
 //TODO: 捕食者
 //TODO: ファイルを分けたい
+//TODO: ブロックを消せるようにしたい 
+//TODO: 引き寄せるブロックも作りたい 
+//TODO: ブロックの中に入れないようにしたい 
 #include "stdafx.h"
 #include <GL/glut.h>
 #define _USE_MATH_DEFINES
