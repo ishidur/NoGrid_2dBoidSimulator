@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "Point.h"
+
 class Direction
 {
 public:
@@ -17,4 +19,5 @@ public:
 	 * \param _y 
 	 */
 	Direction(double _x, double _y);
+	Direction(Point point);
 };

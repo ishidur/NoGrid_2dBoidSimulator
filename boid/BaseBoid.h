@@ -18,13 +18,13 @@ public:
 
 	/**
 	 * \brief 
-	 * \param _x 
-	 * \param _y 
-	 * \param _angle 
-	 * \param _speed 
-	 * \param _id 
+	 * \param x 
+	 * \param y 
+	 * \param angle 
+	 * \param speed 
+	 * \param id 
 	 */
-	BaseBoid(double _x = 0.0, double _y = 0.0, double _angle = 0.0, double _speed = 0.0, int _id = -1);
+	BaseBoid(double x = 0.0, double y = 0.0, double angle = 0.0, double speed = 0.0, int id = -1);
 
 	void setColor(double red, double green, double blue);
 
@@ -32,6 +32,5 @@ public:
 
 	void updatePosition();
 
-	bool isVisible(BaseBoid boid);
-	
+	bool isVisible(double x, double y);
 };

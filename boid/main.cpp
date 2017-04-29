@@ -14,11 +14,12 @@
 #include "Grid.h"
 #include "BaseBoid.h"
 #include "Direction.h"
+#include "Point.h"
 #include "parameters.h" //import common parameters
 using namespace std;
 
-
 int time = 0; //time
+
 //For debug
 //double posX = 1.0;
 //double posY = 1.0;
@@ -30,6 +31,38 @@ double calcDist(double x1, double y1, double x2, double y2)
 }
 
 Grid grids[GRID_NO][GRID_NO];
+
+class Block
+{
+public:
+	double x; //center x
+	double y; //center y
+	double r; //radius
+	Block(double _x, double _y, double _r)
+	{
+		x = _x;
+		y = _y;
+		r = _r;
+	}
+
+	void drawBlock()
+	{
+		int n = 20;
+		double angl = 2.0 * M_PI / n;
+		glColor3d(0.5, 0.5, 0.5);
+		glPushMatrix();
+		glTranslated(x, y, 0.0);
+		glBegin(GL_POLYGON);
+		for (int i = 0; i < n; ++i)
+		{
+			glVertex2d(r * cos(double(i) * angl), r * sin(double(i) * angl));
+		}
+		glEnd();
+		glPopMatrix();
+	}
+};
+
+vector<Block> blocks;
 
 //this function needs grids
 vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
@@ -84,7 +117,7 @@ BaseBoid findNearestBoid(BaseBoid boid)
 	for (auto i : indexes)
 	{
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
-		if (boid.id == 0 && boid.isVisible(boids[i]))
+		if (boid.id == 0 && boid.isVisible(boids[i].x, boids[i].y))
 		{
 			if (dist > OPTIMUM_DISTANCE)
 			{
@@ -96,7 +129,7 @@ BaseBoid findNearestBoid(BaseBoid boid)
 			}
 		}
 
-		if (boid.isVisible(boids[i]) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
+		if (boid.isVisible(boids[i].x, boids[i].y) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
 		{
 			nearestBaseBoid = boids[i];
 			minDist = dist;
@@ -105,10 +138,51 @@ BaseBoid findNearestBoid(BaseBoid boid)
 	return nearestBaseBoid;
 }
 
+Point repelWall(Point p, BaseBoid boid)
+{
+	double repel;
+	if (boid.x >= BOUNDARY - OPTIMUM_DISTANCE)
+	{
+		repel = -1.0 / (BOUNDARY - WALL_SIZE - boid.x);
+		p.x += REPEL_WALL_WEIGHT * repel;
+	}
+	else if (boid.x <= -BOUNDARY + OPTIMUM_DISTANCE)
+	{
+		repel = 1.0 / (BOUNDARY - WALL_SIZE + boid.x);
+		p.x += REPEL_WALL_WEIGHT * repel;
+	}
+	if (boid.y >= BOUNDARY - OPTIMUM_DISTANCE)
+	{
+		repel = -1.0 / (BOUNDARY - WALL_SIZE - boid.y);
+		p.y += REPEL_WALL_WEIGHT * repel;
+	}
+	else if (boid.y <= -BOUNDARY + OPTIMUM_DISTANCE)
+	{
+		repel = 1.0 / (BOUNDARY - WALL_SIZE + boid.y);
+		p.y += REPEL_WALL_WEIGHT * repel;
+	}
+	return p;
+}
+
+Point repelBlock(Point p, BaseBoid boid)
+{
+	double repel;
+	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
+	{
+		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
+		if (dist - BLOCK_SIZE <= OPTIMUM_DISTANCE)
+		{
+			// repel
+			p.x += -REPEL_WEIGHT * (blocks[n].x - boid.x) / dist / dist * OPTIMUM_DISTANCE;
+			p.y += -REPEL_WEIGHT * (blocks[n].y - boid.y) / dist / dist * OPTIMUM_DISTANCE;
+		}
+	}
+	return p;
+}
+
 //TODO: it is too long
 BaseBoid updateAngleAndSpeed(double gx, double gy, BaseBoid boid)
 {
-	
 	double dist = calcDist(gx, gy, boid.x, boid.y);
 	double gvx = (gx - boid.x) / dist;
 	double gvy = (gy - boid.y) / dist;
@@ -116,33 +190,15 @@ BaseBoid updateAngleAndSpeed(double gx, double gy, BaseBoid boid)
 	BaseBoid nearestBaseBoid = findNearestBoid(boid);
 	Direction bSpeedDirection = Direction(nearestBaseBoid.angle);
 	Direction thisBaseBoidDirection = Direction(boid.angle);
-	double repel;
 	double bx = nearestBaseBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.x;
 	double by = nearestBaseBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.y;
 	double vx = thisBaseBoidDirection.x + CENTRIPETAL_WEIGHT * gDirection.x + ALIGNMENT_WEIGHT * bx;
 	double vy = thisBaseBoidDirection.y + CENTRIPETAL_WEIGHT * gDirection.y + ALIGNMENT_WEIGHT * by;
+	Point v = Point(vx, vy);
 	//		double vx = thisBaseBoidDirection.x;
 	//		double vy = thisBaseBoidDirection.y;
-	if (boid.x >= BOUNDARY - OPTIMUM_DISTANCE)
-	{
-		repel = -1.0 / (BOUNDARY - BLOCK_SIZE - boid.x);
-		vx += REPEL_WEIGHT * repel;
-	}
-	else if (boid.x <= -BOUNDARY + OPTIMUM_DISTANCE)
-	{
-		repel = 1.0 / (BOUNDARY - BLOCK_SIZE + boid.x);
-		vx += REPEL_WEIGHT * repel;
-	}
-	if (boid.y >= BOUNDARY - OPTIMUM_DISTANCE)
-	{
-		repel = -1.0 / (BOUNDARY - BLOCK_SIZE - boid.y);
-		vy += REPEL_WEIGHT * repel;
-	}
-	else if (boid.y <= -BOUNDARY + OPTIMUM_DISTANCE)
-	{
-		repel = 1.0 / (BOUNDARY - BLOCK_SIZE + boid.y);
-		vy += REPEL_WEIGHT * repel;
-	}
+	v = repelWall(v, boid);
+	v = repelBlock(v, boid);
 
 	if (nearestBaseBoid.x != BOUNDARY * 2.0)
 	{
@@ -189,7 +245,7 @@ BaseBoid updateAngleAndSpeed(double gx, double gy, BaseBoid boid)
 			boid.speed = MAXSPEED;
 		}
 	}
-	boid.angle = Direction(vx, vy).angle;
+	boid.angle = Direction(v).angle;
 	return boid;
 }
 
@@ -199,26 +255,26 @@ void drawWall()
 	double boundary = BOUNDARY;
 	glBegin(GL_POLYGON);
 	glVertex2d(boundary, boundary);
-	glVertex2d(boundary - BLOCK_SIZE, boundary);
-	glVertex2d(boundary - BLOCK_SIZE, -boundary);
+	glVertex2d(boundary - WALL_SIZE, boundary);
+	glVertex2d(boundary - WALL_SIZE, -boundary);
 	glVertex2d(boundary, -boundary);
 	glEnd();
 	glBegin(GL_POLYGON);
 	glVertex2d(boundary, boundary);
-	glVertex2d(boundary, boundary - BLOCK_SIZE);
-	glVertex2d(-boundary, boundary - BLOCK_SIZE);
+	glVertex2d(boundary, boundary - WALL_SIZE);
+	glVertex2d(-boundary, boundary - WALL_SIZE);
 	glVertex2d(-boundary, boundary);
 	glEnd();
 	glBegin(GL_POLYGON);
 	glVertex2d(-boundary, -boundary);
-	glVertex2d(-boundary, -boundary + BLOCK_SIZE);
-	glVertex2d(boundary, -boundary + BLOCK_SIZE);
+	glVertex2d(-boundary, -boundary + WALL_SIZE);
+	glVertex2d(boundary, -boundary + WALL_SIZE);
 	glVertex2d(boundary, -boundary);
 	glEnd();
 	glBegin(GL_POLYGON);
 	glVertex2d(-boundary, -boundary);
-	glVertex2d(-boundary + BLOCK_SIZE, -boundary);
-	glVertex2d(-boundary + BLOCK_SIZE, boundary);
+	glVertex2d(-boundary + WALL_SIZE, -boundary);
+	glVertex2d(-boundary + WALL_SIZE, boundary);
 	glVertex2d(-boundary, boundary);
 	glEnd();
 }
@@ -271,6 +327,10 @@ void coloringGrids()
 			{
 				glColor3d(0.3, 0.3, 0.3);
 			}
+			//			if (find(grids[i][j].blockIndexes.begin(), grids[i][j].blockIndexes.end(), 0) != grids[i][j].blockIndexes.end())
+			//			{
+			//				glColor3d(0.3, 0.3, 0.3);
+			//			}
 			glBegin(GL_POLYGON);
 			glVertex2d(grids[i][j].left, grids[i][j].top);
 			glVertex2d(grids[i][j].left, grids[i][j].bottom);
@@ -292,14 +352,58 @@ void findGrid(int index, double x, double y)
 	boids[index].grid_y = gridy;
 }
 
+void whereBlock(int index, double x, double y)
+{
+	double width = 2.0 * BOUNDARY / GRID_NO;
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
+	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
+	grids[gridy][gridx].addBlockByIndex(index);
+	if (gridx > 0)
+	{
+		grids[gridy][gridx - 1].addBlockByIndex(index);
+		if (gridy > 0)
+		{
+			grids[gridy - 1][gridx - 1].addBlockByIndex(index);
+		}
+		if (gridy < GRID_NO - 1)
+		{
+			grids[gridy + 1][gridx - 1].addBlockByIndex(index);
+		}
+	}
+	if (gridx < GRID_NO - 1)
+	{
+		grids[gridy][gridx + 1].addBlockByIndex(index);
+		if (gridy > 0)
+		{
+			grids[gridy - 1][gridx + 1].addBlockByIndex(index);
+		}
+		if (gridy < GRID_NO - 1)
+		{
+			grids[gridy + 1][gridx + 1].addBlockByIndex(index);
+		}
+	}
+	if (gridy > 0)
+	{
+		grids[gridy - 1][gridx].addBlockByIndex(index);
+	}
+	if (gridy < GRID_NO - 1)
+	{
+		grids[gridy + 1][gridx].addBlockByIndex(index);
+	}
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	coloringGrids();
 	drawWall();
-	for (int i = 0; i < BOIDS_NO; i++)
+	for (auto boid:boids)
 	{
-		boids[i].drawBaseBoid();
+		boid.drawBaseBoid();
+	}
+	for (auto block:blocks)
+	{
+		block.drawBlock();
 	}
 	glFlush();
 }
@@ -309,6 +413,17 @@ void resize(int w, int h)
 	glViewport(0, 0, w, h);
 	glLoadIdentity();
 	glOrtho(-w / WINDOW_SIZE * BOUNDARY, w / WINDOW_SIZE * BOUNDARY, -h / WINDOW_SIZE * BOUNDARY, h / WINDOW_SIZE * BOUNDARY, -1.0, 1.0);
+}
+
+void mouse(int button, int state, int x, int y)
+{
+	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	{
+		blocks.push_back(Block(pos_x, pos_y, BLOCK_SIZE));
+		whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
+	}
 }
 
 void timer(int value)
@@ -355,18 +470,23 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
+	glutMouseFunc(mouse);
 	init();
 	createGrids();
-
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - 0.5) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI,BOID_SPEED, i));
+		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI,BOID_SPEED, i));
 		//		boids[i] = BaseBoid(posX, posY + i, initAngle / 180.0 * M_PI,BOID_SPEED, i);
 		findGrid(i, boids[i].x, boids[i].y);
 		if (i == 0)
 		{
 			boids[i].setColor(1.0, 0.0, 0.0);
 		}
+	}
+	for (int i = 0; i < BLOCK_NO; ++i)
+	{
+		blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) / RAND_MAX, BLOCK_SIZE));
+		whereBlock(i, blocks[i].x, blocks[i].y);
 	}
 	updateGrids();
 	glutDisplayFunc(display);

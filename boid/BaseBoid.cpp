@@ -8,26 +8,30 @@
 //境界条件: 壁
 double checkBoundary(double pos)
 {
-	if (pos > BOUNDARY - BLOCK_SIZE)
+	if (pos > BOUNDARY - WALL_SIZE)
 	{
-		pos = BOUNDARY - BLOCK_SIZE;
+		pos = BOUNDARY - WALL_SIZE;
 	}
-	else if (pos < -BOUNDARY + BLOCK_SIZE)
+	else if (pos < -BOUNDARY + WALL_SIZE)
 	{
-		pos = -BOUNDARY + BLOCK_SIZE;
+		pos = -BOUNDARY + WALL_SIZE;
 	}
 	return pos;
 }
+
 double radianToDegree(double rad)
 {
 	return rad * 180.0 / M_PI;
 }
+
 double degreeToRadian(double deg)
 {
 	return deg * M_PI / 180.0;
 }
+
 //this needs for Biod::isVisible
 double __viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
+
 BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
 {
 	id = _id;
@@ -36,12 +40,14 @@ BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
 	angle = _angle;
 	speed = _speed;
 }
+
 void BaseBoid::setColor(double red, double green, double blue)
 {
 	r = red;
 	g = green;
 	b = blue;
 }
+
 void BaseBoid::drawBaseBoid() //TODO:鳥らしく
 {
 	glColor3d(r, g, b);
@@ -55,6 +61,7 @@ void BaseBoid::drawBaseBoid() //TODO:鳥らしく
 	glEnd();
 	glPopMatrix();
 }
+
 void BaseBoid::updatePosition()
 {
 	Direction vector = Direction(angle);
@@ -67,10 +74,11 @@ void BaseBoid::updatePosition()
 	Direction nextDirection = Direction(dx, dy);
 	angle = nextDirection.angle;
 }
-bool BaseBoid::isVisible(BaseBoid boid)
+
+bool BaseBoid::isVisible(double _x, double _y)
 {
-	double dx = boid.x - x;
-	double dy = boid.y - y;
+	double dx = _x - x;
+	double dy = _y - y;
 	Direction bDirection = Direction(dx, dy);
 	double maxAngle = angle + __viewAngle;
 	double minAngle = angle - __viewAngle;

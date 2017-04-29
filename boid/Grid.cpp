@@ -29,3 +29,8 @@ bool Grid::findBoidByIndex(int index)
 	}
 	return false;
 }
+void Grid::addBlockByIndex(int index)
+{
+	blockIndexes.push_back(index);
+	sort(blockIndexes.begin(), blockIndexes.end());
+}

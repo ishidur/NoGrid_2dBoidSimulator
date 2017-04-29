@@ -10,6 +10,7 @@ public:
 	double top;
 	double bottom;
 	std::vector<int> boidIndexes;
+	std::vector<int> blockIndexes;
 
 	/**
 	 * \brief 
@@ -19,10 +20,8 @@ public:
 	 * \param _right 
 	 */
 	Grid(double _top = 0.0, double _bottom = 0.0, double _left = 0.0, double _right = 0.0);
-
 	void addBoidByIndex(int index);
-
 	void deleteBoidByIndex(int index);
-
 	bool findBoidByIndex(int index);
+	void addBlockByIndex(int index);
 };
