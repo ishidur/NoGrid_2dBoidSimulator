@@ -274,7 +274,8 @@ public:
 				if (dist > OPTIMUM_DISTANCE)
 				{
 					setColor(0.1, 0.1, 1.0);
-				}else
+				}
+				else
 				{
 					setColor(0.0, 1.0, 1.0);
 				}
@@ -342,19 +343,11 @@ public:
 				{
 					//front
 					speed /= ACCEL;
-					if (speed < MINSPEED)
-					{
-						speed = MINSPEED;
-					}
 				}
 				else
 				{
 					//back
 					speed *= ACCEL;
-					if (speed > MAXSPEED)
-					{
-						speed = MAXSPEED;
-					}
 				}
 			}
 			else if (boidDist > OPTIMUM_DISTANCE)
@@ -364,20 +357,20 @@ public:
 				{
 					//front
 					speed *= ACCEL;
-					if (speed > MAXSPEED)
-					{
-						speed = MAXSPEED;
-					}
 				}
 				else
 				{
 					//back
 					speed /= ACCEL;
-					if (speed < MINSPEED)
-					{
-						speed = MINSPEED;
-					}
 				}
+			}
+			if (speed < MINSPEED)
+			{
+				speed = MINSPEED;
+			}
+			else if (speed > MAXSPEED)
+			{
+				speed = MAXSPEED;
 			}
 		}
 		angle = Direction(vx, vy).angle;
@@ -434,7 +427,7 @@ void createGrids()
 	}
 }
 
-//this function needs grids, boids
+//this function needs grids, boids: ”ñŒø—¦‚©‚à
 void updateGrid()
 {
 	for (int i = 0; i < GRID_NO; i++)
@@ -506,10 +499,10 @@ void resize(int w, int h)
 
 void timer(int value)
 {
-	if (time % 10 == 0)
-	{
-		cout << time / 10 << endl;
-	}
+	//	if (time % 10 == 0)
+	//	{
+	//		cout << time / 10 << endl;
+	//	}
 	double gx = 0.0, gy = 0.0;
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
