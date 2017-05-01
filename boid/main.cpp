@@ -24,6 +24,9 @@
 using namespace std;
 
 int time = 0; //time
+bool isPress = false;
+double mouseX = 0.0;
+double mouseY = 0.0;
 
 //For debug
 //double posX = 1.0;
@@ -124,24 +127,26 @@ tuple<BaseBoid, double, double> findNearestBoid(BaseBoid boid)
 Point repelWall(Point p, BaseBoid boid)
 {
 	double repel;
-	if (boid.x >= BOUNDARY - OPTIMUM_DISTANCE)
+	double dist = BOUNDARY - BOID_SIZE - WALL_SIZE;
+	double bound = dist - OPTIMUM_DISTANCE;
+	if (boid.x >= bound)
 	{
-		repel = -1.0 / (BOUNDARY - WALL_SIZE - boid.x);
+		repel = -1.0 / (dist - boid.x);
 		p.x += REPEL_WALL_WEIGHT * repel;
 	}
-	else if (boid.x <= -BOUNDARY + OPTIMUM_DISTANCE)
+	else if (boid.x <= -bound)
 	{
-		repel = 1.0 / (BOUNDARY - WALL_SIZE + boid.x);
+		repel = 1.0 / (dist + boid.x);
 		p.x += REPEL_WALL_WEIGHT * repel;
 	}
-	if (boid.y >= BOUNDARY - OPTIMUM_DISTANCE)
+	if (boid.y >= bound)
 	{
-		repel = -1.0 / (BOUNDARY - WALL_SIZE - boid.y);
+		repel = -1.0 / (dist - boid.y);
 		p.y += REPEL_WALL_WEIGHT * repel;
 	}
-	else if (boid.y <= -BOUNDARY + OPTIMUM_DISTANCE)
+	else if (boid.y <= -bound)
 	{
-		repel = 1.0 / (BOUNDARY - WALL_SIZE + boid.y);
+		repel = 1.0 / (dist + boid.y);
 		p.y += REPEL_WALL_WEIGHT * repel;
 	}
 	return p;
@@ -153,11 +158,21 @@ Point repelBlock(Point p, BaseBoid boid)
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
 		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
-		if (dist - BLOCK_SIZE <= OPTIMUM_DISTANCE && !blocks[n].disabled)
+		if (dist - BLOCK_SIZE - BOID_SIZE <= OPTIMUM_DISTANCE && !blocks[n].disabled)
 		{
 			// repel
 			p.x += -REPEL_WEIGHT * (blocks[n].x - boid.x) / dist / dist * OPTIMUM_DISTANCE;
 			p.y += -REPEL_WEIGHT * (blocks[n].y - boid.y) / dist / dist * OPTIMUM_DISTANCE;
+		}
+	}
+	if (isPress)
+	{
+		double dist = calcDist(boid.x, boid.y, mouseX, mouseY);
+		if (dist <= OPTIMUM_DISTANCE)
+		{
+			// repel
+			p.x += -REPEL_WEIGHT * (mouseX - boid.x) / dist / dist * OPTIMUM_DISTANCE;
+			p.y += -REPEL_WEIGHT * (mouseY - boid.y) / dist / dist * OPTIMUM_DISTANCE;
 		}
 	}
 	return p;
@@ -466,7 +481,7 @@ void mouse(int button, int state, int x, int y)
 {
 	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
 	{
 		int index = findDuplicateBlock(pos_x, pos_y);
 		if (index != -1)
@@ -478,6 +493,20 @@ void mouse(int button, int state, int x, int y)
 		{
 			blocks.push_back(Block(pos_x, pos_y, BLOCK_SIZE));
 			whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
+		}
+	}
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_DOWN)
+		{
+			cout << "pressing [" << pos_x << ", " << pos_y << "]" << endl;
+			mouseX = pos_x;
+			mouseY = pos_y;
+			isPress = true;
+		}
+		else
+		{
+			isPress = false;
 		}
 	}
 }
