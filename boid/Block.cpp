@@ -26,3 +26,8 @@ void Block::drawBlock()
 	glEnd();
 	glPopMatrix();
 }
+void Block::setDisabled()
+{
+	disabled = true;
+}
+

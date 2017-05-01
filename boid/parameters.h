@@ -13,7 +13,7 @@
 #define BOUNDARY 20.0 //area boundary
 #define VIEW_ANGLE 360.0 //boid view angle: degree
 #define REPEL_WEIGHT 0.5 //repel force weight
-#define REPEL_WALL_WEIGHT 0.5 //repel force weight
+#define REPEL_WALL_WEIGHT 1.0 //repel force weight
 
 #define OPTIMUM_DISTANCE 2.0*BOUNDARY/GRID_NO //optimum distance
 #define CENTRIPETAL_WEIGHT 0.1 //centripetal  weight

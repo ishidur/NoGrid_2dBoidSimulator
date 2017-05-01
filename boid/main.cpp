@@ -6,12 +6,13 @@
 //TODO: ファイルを分けたい
 //TODO: ブロックを消せるようにしたい 
 //TODO: 引き寄せるブロックも作りたい 
-//TODO: ブロックの中に入れないようにしたい 
+//TODO: ブロックの中に入れないようにしたい
 #include "stdafx.h"
 #include <GL/glut.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <vector>
+#include <tuple>
 #include <algorithm>
 #include <iostream>
 #include "Grid.h"
@@ -83,14 +84,17 @@ vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 
 vector<BaseBoid> boids;
 
-BaseBoid findNearestBoid(BaseBoid boid)
+tuple<BaseBoid, double, double> findNearestBoid(BaseBoid boid)
 {
 	BaseBoid nearestBaseBoid;
 	double minDist = 0.0;
+	double gx = 0.0, gy = 0.0;
 	auto indexes = getAroundGridBoids(boid.id, boid.grid_x, boid.grid_y);
 	for (auto i : indexes)
 	{
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
+		gx += boids[i].x;
+		gy += boids[i].y;
 		if (boid.id == 0 && boid.isVisible(boids[i].x, boids[i].y))
 		{
 			if (dist > OPTIMUM_DISTANCE)
@@ -109,7 +113,12 @@ BaseBoid findNearestBoid(BaseBoid boid)
 			minDist = dist;
 		}
 	}
-	return nearestBaseBoid;
+	if (indexes.size() != 0)
+	{
+		gx /= indexes.size();
+		gy /= indexes.size();
+	}
+	return forward_as_tuple(nearestBaseBoid, gx, gy);
 }
 
 Point repelWall(Point p, BaseBoid boid)
@@ -144,7 +153,7 @@ Point repelBlock(Point p, BaseBoid boid)
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
 		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
-		if (dist - BLOCK_SIZE <= OPTIMUM_DISTANCE)
+		if (dist - BLOCK_SIZE <= OPTIMUM_DISTANCE && !blocks[n].disabled)
 		{
 			// repel
 			p.x += -REPEL_WEIGHT * (blocks[n].x - boid.x) / dist / dist * OPTIMUM_DISTANCE;
@@ -155,19 +164,23 @@ Point repelBlock(Point p, BaseBoid boid)
 }
 
 //TODO: it is too long
-BaseBoid updateAngleAndSpeed(double gx, double gy, BaseBoid boid)
+BaseBoid updateAngleAndSpeed(BaseBoid boid)
 {
+	BaseBoid nearestBaseBoid;
+	double gx, gy;
+	tie(nearestBaseBoid, gx, gy) = findNearestBoid(boid);
 	double dist = calcDist(gx, gy, boid.x, boid.y);
 	double gvx = (gx - boid.x) / dist;
 	double gvy = (gy - boid.y) / dist;
 	Direction gDirection = Direction(gvx, gvy);
-	BaseBoid nearestBaseBoid = findNearestBoid(boid);
+	double gdx = gx == 0.0 ? 0.0 : gDirection.x;
+	double gdy = gy == 0.0 ? 0.0 : gDirection.y;
 	Direction bSpeedDirection = Direction(nearestBaseBoid.angle);
 	Direction thisBaseBoidDirection = Direction(boid.angle);
 	double bx = nearestBaseBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.x;
 	double by = nearestBaseBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.y;
-	double vx = thisBaseBoidDirection.x + CENTRIPETAL_WEIGHT * gDirection.x + ALIGNMENT_WEIGHT * bx;
-	double vy = thisBaseBoidDirection.y + CENTRIPETAL_WEIGHT * gDirection.y + ALIGNMENT_WEIGHT * by;
+	double vx = thisBaseBoidDirection.x + CENTRIPETAL_WEIGHT * gdx + ALIGNMENT_WEIGHT * bx;
+	double vy = thisBaseBoidDirection.y + CENTRIPETAL_WEIGHT * gdy + ALIGNMENT_WEIGHT * by;
 	Point v = Point(vx, vy);
 	//		double vx = thisBaseBoidDirection.x;
 	//		double vy = thisBaseBoidDirection.y;
@@ -366,7 +379,48 @@ void whereBlock(int index, double x, double y)
 	}
 }
 
-bool findDuplicateBlock(double x, double y)
+void removeBlock(int index, double x, double y)
+{
+	double width = 2.0 * BOUNDARY / GRID_NO;
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
+	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
+	grids[gridy][gridx].deleteBlockByIndex(index);
+	if (gridx > 0)
+	{
+		grids[gridy][gridx - 1].deleteBlockByIndex(index);
+		if (gridy > 0)
+		{
+			grids[gridy - 1][gridx - 1].deleteBlockByIndex(index);
+		}
+		if (gridy < GRID_NO - 1)
+		{
+			grids[gridy + 1][gridx - 1].deleteBlockByIndex(index);
+		}
+	}
+	if (gridx < GRID_NO - 1)
+	{
+		grids[gridy][gridx + 1].deleteBlockByIndex(index);
+		if (gridy > 0)
+		{
+			grids[gridy - 1][gridx + 1].deleteBlockByIndex(index);
+		}
+		if (gridy < GRID_NO - 1)
+		{
+			grids[gridy + 1][gridx + 1].deleteBlockByIndex(index);
+		}
+	}
+	if (gridy > 0)
+	{
+		grids[gridy - 1][gridx].deleteBlockByIndex(index);
+	}
+	if (gridy < GRID_NO - 1)
+	{
+		grids[gridy + 1][gridx].deleteBlockByIndex(index);
+	}
+	blocks[index].setDisabled();
+}
+
+int findDuplicateBlock(double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
@@ -374,12 +428,12 @@ bool findDuplicateBlock(double x, double y)
 	for (auto i: grids[gridy][gridx].blockIndexes)
 	{
 		double dist = calcDist(x, y, blocks[i].x, blocks[i].y);
-		if (dist <= 2.0 * BLOCK_SIZE)
+		if (dist <= 2.0 * BLOCK_SIZE && !blocks[i].disabled)
 		{
-			return true;
+			return i;
 		}
 	}
-	return false;
+	return -1;
 }
 
 void display(void)
@@ -393,7 +447,10 @@ void display(void)
 	}
 	for (auto block:blocks)
 	{
-		block.drawBlock();
+		if (!block.disabled)
+		{
+			block.drawBlock();
+		}
 	}
 	glFlush();
 }
@@ -411,9 +468,11 @@ void mouse(int button, int state, int x, int y)
 	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 	{
-		if (findDuplicateBlock(pos_x, pos_y))
+		int index = findDuplicateBlock(pos_x, pos_y);
+		if (index != -1)
 		{
-			cout << "exist" << endl;
+			cout << "exist" << index << endl;
+			removeBlock(index, pos_x, pos_y);
 		}
 		else
 		{
@@ -429,12 +488,9 @@ void timer(int value)
 	//	{
 	//		cout << time / 10 << endl;
 	//	}
-	double gx = 0.0, gy = 0.0;
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
 		boids[i].updatePosition();
-		gx += boids[i].x;
-		gy += boids[i].y;
 		if (i != 0)
 		{
 			boids[i].setColor(1.0, 1.0, 1.0);
@@ -442,12 +498,10 @@ void timer(int value)
 		findGrid(i, boids[i].x, boids[i].y);
 	}
 	updateGrids();
-	gx /= double(BOIDS_NO);
-	gy /= double(BOIDS_NO);
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
 		//boid速度ベクトルの計算部分
-		boids[i] = updateAngleAndSpeed(gx, gy, boids[i]);
+		boids[i] = updateAngleAndSpeed(boids[i]);
 		//		boids[i].updateAngleAndSpeed(gx, gy, boids);
 	}
 	glutPostRedisplay();
