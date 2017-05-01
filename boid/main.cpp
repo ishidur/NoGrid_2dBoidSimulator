@@ -481,7 +481,7 @@ void mouse(int button, int state, int x, int y)
 {
 	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
-	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 	{
 		int index = findDuplicateBlock(pos_x, pos_y);
 		if (index != -1)
@@ -495,7 +495,7 @@ void mouse(int button, int state, int x, int y)
 			whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
 		}
 	}
-	if (button == GLUT_LEFT_BUTTON)
+	if (button == GLUT_RIGHT_BUTTON)
 	{
 		if (state == GLUT_DOWN)
 		{
