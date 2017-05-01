@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Grid.h"
+#include <vector>
 #include <algorithm>
 Grid::Grid(double _top, double _bottom, double _left, double _right)
 {
@@ -41,4 +42,8 @@ void Grid::deleteBlockByIndex(int index)
 		remove(blockIndexes.begin(), blockIndexes.end(), index);
 		blockIndexes.pop_back();
 	}
+}
+void Grid::deleteAllBlocks()
+{
+	blockIndexes.clear();
 }

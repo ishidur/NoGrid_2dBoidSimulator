@@ -127,8 +127,8 @@ tuple<BaseBoid, double, double> findNearestBoid(BaseBoid boid)
 Point repelWall(Point p, BaseBoid boid)
 {
 	double repel;
-	double dist = BOUNDARY - BOID_SIZE - WALL_SIZE;
-	double bound = dist - OPTIMUM_DISTANCE;
+	double dist = BOUNDARY  - WALL_SIZE;
+	double bound = dist - BOID_SIZE - OPTIMUM_DISTANCE;
 	if (boid.x >= bound)
 	{
 		repel = -1.0 / (dist - boid.x);
@@ -154,7 +154,6 @@ Point repelWall(Point p, BaseBoid boid)
 
 Point repelBlock(Point p, BaseBoid boid)
 {
-	double repel;
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
 		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
@@ -435,6 +434,18 @@ void removeBlock(int index, double x, double y)
 	blocks[index].setDisabled();
 }
 
+void removeAllBlocks()
+{
+	for (int i = 0; i < GRID_NO; ++i)
+	{
+		for (int j = 0; j < GRID_NO; ++j)
+		{
+			grids[i][j].deleteAllBlocks();
+		}
+	}
+	blocks.clear();
+}
+
 int findDuplicateBlock(double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
@@ -511,6 +522,14 @@ void mouse(int button, int state, int x, int y)
 	}
 }
 
+void key(unsigned char key, int x, int y) {
+	if (key == 'r')
+	{
+		cout << "refresh" << endl;
+		removeAllBlocks();
+	}
+}
+
 void timer(int value)
 {
 	//	if (time % 10 == 0)
@@ -551,6 +570,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
 	glutMouseFunc(mouse);
+	glutKeyboardFunc(key);
 	init();
 	createGrids();
 	for (int i = 0; i < BOIDS_NO; i++)
