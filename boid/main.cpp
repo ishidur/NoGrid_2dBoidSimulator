@@ -180,30 +180,23 @@ BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 	Eigen::Vector2d g;
 	std::tie(nearestBaseBoid, g) = findNearestBoid(boid);
 	double dist = calcDist(g.x(), g.y(), boid.x, boid.y);
-	double gvx = (g.x() - boid.x) / dist;
-	double gvy = (g.y() - boid.y) / dist;
-	Direction gDirection = Direction(gvx, gvy);
-	double gdx = g.x() == 0.0 ? 0.0 : gDirection.x;
-	double gdy = g.y() == 0.0 ? 0.0 : gDirection.y;
+	Eigen::Vector2d gv = Eigen::Vector2d(g.x() - boid.x, g.y() - boid.y);
+	gv /= dist;
+	Eigen::Vector2d gd = Eigen::Vector2d::Zero();
+	if (g != Eigen::Vector2d::Zero())
+	{
+		gd = gv;
+	}
 	Direction bSpeedDirection = Direction(nearestBaseBoid.angle);
 	Direction thisBaseBoidDirection = Direction(boid.angle);
-	double bx = nearestBaseBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.x;
-	double by = nearestBaseBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.y;
-	double vx = thisBaseBoidDirection.x + CENTRIPETAL_WEIGHT * gdx + ALIGNMENT_WEIGHT * bx;
-	double vy = thisBaseBoidDirection.y + CENTRIPETAL_WEIGHT * gdy + ALIGNMENT_WEIGHT * by;
-	Eigen::Vector2d v = Eigen::Vector2d(vx, vy);
-	//		double vx = thisBaseBoidDirection.x;
-	//		double vy = thisBaseBoidDirection.y;
-	v = repelWall(v, boid);
-	v = repelBlock(v, boid);
-
-	if (nearestBaseBoid.x != BOUNDARY * 2.0)
+	Eigen::Vector2d nbv = Eigen::Vector2d::Zero();
+	if (nearestBaseBoid.id != -1)
 	{
+		nbv = Eigen::Vector2d(bSpeedDirection.x, bSpeedDirection.y);
 		double boidDist = calcDist(nearestBaseBoid.x, nearestBaseBoid.y, boid.x, boid.y);
-		double nbx = (nearestBaseBoid.x - boid.x) / boidDist;
-		double nby = (nearestBaseBoid.y - boid.y) / boidDist;
+		Eigen::Vector2d nb = Eigen::Vector2d((nearestBaseBoid.x - boid.x), (nearestBaseBoid.y - boid.y));
 		//TODO: â¡å∏ë¨ê≥ÇµÇ¢ÅH
-		Direction bDirection = Direction(nbx, nby);
+		Direction bDirection = Direction(nb);
 		double innerPrdct = thisBaseBoidDirection.x * bDirection.x + thisBaseBoidDirection.y * bDirection.y;
 		if (boidDist < OPTIMUM_DISTANCE)
 		{
@@ -242,6 +235,10 @@ BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 			boid.speed = MAXSPEED;
 		}
 	}
+	Eigen::Vector2d v = thisBaseBoidDirection.vector + CENTRIPETAL_WEIGHT * gd + ALIGNMENT_WEIGHT * nbv;
+	v = repelWall(v, boid);
+	v = repelBlock(v, boid);
+
 	boid.angle = Direction(v).angle;
 	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
 	return boid;
@@ -590,7 +587,7 @@ int main(int argc, char* argv[])
 	updateGrids();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
-		glutTimerFunc(FLAME_RATE, timer, time);
+	glutTimerFunc(FLAME_RATE, timer, time);
 	glutMainLoop();
 	return 0;
 }
