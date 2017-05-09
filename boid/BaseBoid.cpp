@@ -65,16 +65,10 @@ void BaseBoid::drawBaseBoid() //TODO:鳥らしく
 
 void BaseBoid::updatePosition()
 {
-	Direction vector = Direction(angle);
-	
-	double dx = speed * vector.x;
-	double dy = speed * vector.y;
-	x += dx * FLAME_RATE / 1000.0;
-	y += dy * FLAME_RATE / 1000.0;
+	x += vctr.x() * FLAME_RATE / 1000.0;
+	y += vctr.y() * FLAME_RATE / 1000.0;
 	x = checkBoundary(x);
 	y = checkBoundary(y);
-	Direction nextDirection = Direction(dx, dy);
-	angle = nextDirection.angle;
 }
 
 bool BaseBoid::isVisible(double _x, double _y)
@@ -84,6 +78,7 @@ bool BaseBoid::isVisible(double _x, double _y)
 	Direction bDirection = Direction(dx, dy);
 	double maxAngle = angle + _viewAngle;
 	double minAngle = angle - _viewAngle;
+
 	bool max = maxAngle > M_PI ? bDirection.angle > maxAngle - 2.0 * M_PI : bDirection.angle > maxAngle;
 	bool min = minAngle < -M_PI ? bDirection.angle < minAngle + 2.0 * M_PI : bDirection.angle < minAngle;
 	if (max && min)

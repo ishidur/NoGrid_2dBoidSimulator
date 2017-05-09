@@ -86,17 +86,17 @@ std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 
 std::vector<BaseBoid> boids;
 
-std::tuple<BaseBoid, double, double> findNearestBoid(BaseBoid& boid)
+std::tuple<BaseBoid, Eigen::Vector2d> findNearestBoid(BaseBoid& boid)
 {
 	BaseBoid nearestBaseBoid;
 	double minDist = 0.0;
-	double gx = 0.0, gy = 0.0;
+	Eigen::Vector2d g = Eigen::Vector2d::Zero();
 	auto indexes = getAroundGridBoids(boid.id, boid.grid_x, boid.grid_y);
 	for (auto i : indexes)
 	{
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
-		gx += boids[i].x;
-		gy += boids[i].y;
+		g.x() += boids[i].x;
+		g.y() += boids[i].y;
 		if (boid.id == 0 && boid.isVisible(boids[i].x, boids[i].y))
 		{
 			if (dist > OPTIMUM_DISTANCE)
@@ -117,10 +117,10 @@ std::tuple<BaseBoid, double, double> findNearestBoid(BaseBoid& boid)
 	}
 	if (indexes.size() != 0)
 	{
-		gx /= indexes.size();
-		gy /= indexes.size();
+		g.x() /= indexes.size();
+		g.y() /= indexes.size();
 	}
-	return std::forward_as_tuple(nearestBaseBoid, gx, gy);
+	return std::forward_as_tuple(nearestBaseBoid, g);
 }
 
 Eigen::Vector2d repelWall(Eigen::Vector2d& p, BaseBoid& boid)
@@ -177,14 +177,14 @@ Eigen::Vector2d repelBlock(Eigen::Vector2d& p, BaseBoid& boid)
 BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 {
 	BaseBoid nearestBaseBoid;
-	double gx, gy;
-	std::tie(nearestBaseBoid, gx, gy) = findNearestBoid(boid);
-	double dist = calcDist(gx, gy, boid.x, boid.y);
-	double gvx = (gx - boid.x) / dist;
-	double gvy = (gy - boid.y) / dist;
+	Eigen::Vector2d g;
+	std::tie(nearestBaseBoid, g) = findNearestBoid(boid);
+	double dist = calcDist(g.x(), g.y(), boid.x, boid.y);
+	double gvx = (g.x() - boid.x) / dist;
+	double gvy = (g.y() - boid.y) / dist;
 	Direction gDirection = Direction(gvx, gvy);
-	double gdx = gx == 0.0 ? 0.0 : gDirection.x;
-	double gdy = gy == 0.0 ? 0.0 : gDirection.y;
+	double gdx = g.x() == 0.0 ? 0.0 : gDirection.x;
+	double gdy = g.y() == 0.0 ? 0.0 : gDirection.y;
 	Direction bSpeedDirection = Direction(nearestBaseBoid.angle);
 	Direction thisBaseBoidDirection = Direction(boid.angle);
 	double bx = nearestBaseBoid.x == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.x;
@@ -243,6 +243,7 @@ BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 		}
 	}
 	boid.angle = Direction(v).angle;
+	boid.vctr = Eigen::Vector2d(-sin(boid.angle)*boid.speed, cos(boid.angle)*boid.speed);
 	return boid;
 }
 
