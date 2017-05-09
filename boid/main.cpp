@@ -21,7 +21,7 @@
 #include "Point.h"
 #include "Block.h"
 #include "parameters.h" //import common parameters
-using namespace std;
+#include "Eigen/Core"
 
 int time = 0; //time
 bool isPress = false;
@@ -40,12 +40,12 @@ double calcDist(double x1, double y1, double x2, double y2)
 
 Grid grids[GRID_NO][GRID_NO];
 
-vector<Block> blocks;
+std::vector<Block> blocks;
 
 //this function needs grids
-vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
+std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 {
-	vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
+	std::vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
 	if (grid_y > 0)
 	{
 		indexes.insert(indexes.end(), grids[grid_y - 1][grid_x].boidIndexes.begin(), grids[grid_y - 1][grid_x].boidIndexes.end());
@@ -85,9 +85,9 @@ vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 	return indexes;
 }
 
-vector<BaseBoid> boids;
+std::vector<BaseBoid> boids;
 
-tuple<BaseBoid, double, double> findNearestBoid(BaseBoid boid)
+std::tuple<BaseBoid, double, double> findNearestBoid(BaseBoid& boid)
 {
 	BaseBoid nearestBaseBoid;
 	double minDist = 0.0;
@@ -121,13 +121,13 @@ tuple<BaseBoid, double, double> findNearestBoid(BaseBoid boid)
 		gx /= indexes.size();
 		gy /= indexes.size();
 	}
-	return forward_as_tuple(nearestBaseBoid, gx, gy);
+	return std::forward_as_tuple(nearestBaseBoid, gx, gy);
 }
 
-Point repelWall(Point p, BaseBoid boid)
+Point repelWall(Point p, BaseBoid& boid)
 {
 	double repel;
-	double dist = BOUNDARY  - WALL_SIZE;
+	double dist = BOUNDARY - WALL_SIZE;
 	double bound = dist - BOID_SIZE - OPTIMUM_DISTANCE;
 	if (boid.x >= bound)
 	{
@@ -152,7 +152,7 @@ Point repelWall(Point p, BaseBoid boid)
 	return p;
 }
 
-Point repelBlock(Point p, BaseBoid boid)
+Point repelBlock(Point p, BaseBoid& boid)
 {
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
@@ -178,11 +178,11 @@ Point repelBlock(Point p, BaseBoid boid)
 }
 
 //TODO: it is too long
-BaseBoid updateAngleAndSpeed(BaseBoid boid)
+BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 {
 	BaseBoid nearestBaseBoid;
 	double gx, gy;
-	tie(nearestBaseBoid, gx, gy) = findNearestBoid(boid);
+	std::tie(nearestBaseBoid, gx, gy) = findNearestBoid(boid);
 	double dist = calcDist(gx, gy, boid.x, boid.y);
 	double gvx = (gx - boid.x) / dist;
 	double gvy = (gy - boid.y) / dist;
@@ -305,7 +305,7 @@ void updateGrids()
 	{
 		for (int j = 0; j < GRID_NO; j++)
 		{
-			vector<int> indexes = grids[i][j].boidIndexes;
+			std::vector<int> indexes = grids[i][j].boidIndexes;
 			for (auto n : indexes)
 			{
 				if (boids[n].grid_y != i || boids[n].grid_x != j)
@@ -451,7 +451,7 @@ int findDuplicateBlock(double x, double y)
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width)) - 1;
 	int gridy = int(ceil((BOUNDARY - y) / width)) - 1;
-	for (auto i: grids[gridy][gridx].blockIndexes)
+	for (auto i : grids[gridy][gridx].blockIndexes)
 	{
 		double dist = calcDist(x, y, blocks[i].x, blocks[i].y);
 		if (dist <= 2.0 * BLOCK_SIZE && !blocks[i].disabled)
@@ -467,11 +467,11 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT);
 	coloringGrids();
 	drawWall();
-	for (auto boid:boids)
+	for (auto boid : boids)
 	{
 		boid.drawBaseBoid();
 	}
-	for (auto block:blocks)
+	for (auto block : blocks)
 	{
 		if (!block.disabled)
 		{
@@ -497,7 +497,7 @@ void mouse(int button, int state, int x, int y)
 		int index = findDuplicateBlock(pos_x, pos_y);
 		if (index != -1)
 		{
-			cout << "exist" << index << endl;
+			std::cout << "exist" << index << std::endl;
 			removeBlock(index, pos_x, pos_y);
 		}
 		else
@@ -510,7 +510,7 @@ void mouse(int button, int state, int x, int y)
 	{
 		if (state == GLUT_DOWN)
 		{
-			cout << "pressing [" << pos_x << ", " << pos_y << "]" << endl;
+			std::cout << "pressing [" << pos_x << ", " << pos_y << "]" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			isPress = true;
@@ -525,7 +525,7 @@ void mouse(int button, int state, int x, int y)
 void key(unsigned char key, int x, int y) {
 	if (key == 'r')
 	{
-		cout << "refresh" << endl;
+		std::cout << "refresh" << std::endl;
 		removeAllBlocks();
 	}
 }
@@ -573,9 +573,10 @@ int main(int argc, char* argv[])
 	glutKeyboardFunc(key);
 	init();
 	createGrids();
+
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI,BOID_SPEED, i));
+		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, i));
 		//		boids[i] = BaseBoid(posX, posY + i, initAngle / 180.0 * M_PI,BOID_SPEED, i);
 		findGrid(i, boids[i].x, boids[i].y);
 		if (i == 0)

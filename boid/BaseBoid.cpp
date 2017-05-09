@@ -30,7 +30,7 @@ double degreeToRadian(double deg)
 }
 
 //this needs for Biod::isVisible
-double __viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
+double _viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
 
 BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
 {
@@ -39,6 +39,7 @@ BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
 	y = _y;
 	angle = _angle;
 	speed = _speed;
+	vctr = Eigen::Vector2d(-sin(_angle) * _speed, cos(_angle) * _speed);
 }
 
 void BaseBoid::setColor(double red, double green, double blue)
@@ -80,10 +81,10 @@ bool BaseBoid::isVisible(double _x, double _y)
 	double dx = _x - x;
 	double dy = _y - y;
 	Direction bDirection = Direction(dx, dy);
-	double maxAngle = angle + __viewAngle;
-	double minAngle = angle - __viewAngle;
-	bool max = maxAngle > 3.0 * M_PI / 2.0 ? bDirection.angle > maxAngle - 2.0 * M_PI : bDirection.angle > maxAngle;
-	bool min = minAngle < -M_PI / 2.0 ? bDirection.angle < minAngle + 2.0 * M_PI : bDirection.angle < minAngle;
+	double maxAngle = angle + _viewAngle;
+	double minAngle = angle - _viewAngle;
+	bool max = maxAngle > M_PI ? bDirection.angle > maxAngle - 2.0 * M_PI : bDirection.angle > maxAngle;
+	bool min = minAngle < -M_PI ? bDirection.angle < minAngle + 2.0 * M_PI : bDirection.angle < minAngle;
 	if (max && min)
 	{
 		return false;
