@@ -18,7 +18,6 @@
 #include "Grid.h"
 #include "BaseBoid.h"
 #include "Direction.h"
-#include "Point.h"
 #include "Block.h"
 #include "parameters.h" //import common parameters
 #include "Eigen/Core"
@@ -124,35 +123,32 @@ std::tuple<BaseBoid, double, double> findNearestBoid(BaseBoid& boid)
 	return std::forward_as_tuple(nearestBaseBoid, gx, gy);
 }
 
-Point repelWall(Point p, BaseBoid& boid)
+Eigen::Vector2d repelWall(Eigen::Vector2d& p, BaseBoid& boid)
 {
-	double repel;
+	Eigen::Vector2d repel=Eigen::Vector2d::Zero();
 	double dist = BOUNDARY - WALL_SIZE;
 	double bound = dist - BOID_SIZE - OPTIMUM_DISTANCE;
 	if (boid.x >= bound)
 	{
-		repel = -1.0 / (dist - boid.x);
-		p.x += REPEL_WALL_WEIGHT * repel;
+		repel.x() = -1.0 / (dist - boid.x);
 	}
 	else if (boid.x <= -bound)
 	{
-		repel = 1.0 / (dist + boid.x);
-		p.x += REPEL_WALL_WEIGHT * repel;
+		repel.x() = 1.0 / (dist + boid.x);
 	}
 	if (boid.y >= bound)
 	{
-		repel = -1.0 / (dist - boid.y);
-		p.y += REPEL_WALL_WEIGHT * repel;
+		repel.y() = -1.0 / (dist - boid.y);
 	}
 	else if (boid.y <= -bound)
 	{
-		repel = 1.0 / (dist + boid.y);
-		p.y += REPEL_WALL_WEIGHT * repel;
+		repel.y() = 1.0 / (dist + boid.y);
 	}
+	p = p + REPEL_WALL_WEIGHT*repel;
 	return p;
 }
 
-Point repelBlock(Point p, BaseBoid& boid)
+Eigen::Vector2d repelBlock(Eigen::Vector2d& p, BaseBoid& boid)
 {
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
@@ -160,8 +156,8 @@ Point repelBlock(Point p, BaseBoid& boid)
 		if (dist - BLOCK_SIZE - BOID_SIZE <= OPTIMUM_DISTANCE && !blocks[n].disabled)
 		{
 			// repel
-			p.x += -REPEL_WEIGHT * (blocks[n].x - boid.x) / dist / dist * OPTIMUM_DISTANCE;
-			p.y += -REPEL_WEIGHT * (blocks[n].y - boid.y) / dist / dist * OPTIMUM_DISTANCE;
+			p.x() += -REPEL_WEIGHT * (blocks[n].x - boid.x) / dist / dist * OPTIMUM_DISTANCE;
+			p.y() += -REPEL_WEIGHT * (blocks[n].y - boid.y) / dist / dist * OPTIMUM_DISTANCE;
 		}
 	}
 	if (isPress)
@@ -170,8 +166,8 @@ Point repelBlock(Point p, BaseBoid& boid)
 		if (dist <= OPTIMUM_DISTANCE)
 		{
 			// repel
-			p.x += -REPEL_WEIGHT * (mouseX - boid.x) / dist / dist * OPTIMUM_DISTANCE;
-			p.y += -REPEL_WEIGHT * (mouseY - boid.y) / dist / dist * OPTIMUM_DISTANCE;
+			p.x() += -REPEL_WEIGHT * (mouseX - boid.x) / dist / dist * OPTIMUM_DISTANCE;
+			p.y() += -REPEL_WEIGHT * (mouseY - boid.y) / dist / dist * OPTIMUM_DISTANCE;
 		}
 	}
 	return p;
@@ -195,7 +191,7 @@ BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 	double by = nearestBaseBoid.y == BOUNDARY * 2.0 ? 0.0 : bSpeedDirection.y;
 	double vx = thisBaseBoidDirection.x + CENTRIPETAL_WEIGHT * gdx + ALIGNMENT_WEIGHT * bx;
 	double vy = thisBaseBoidDirection.y + CENTRIPETAL_WEIGHT * gdy + ALIGNMENT_WEIGHT * by;
-	Point v = Point(vx, vy);
+	Eigen::Vector2d v = Eigen::Vector2d(vx, vy);
 	//		double vx = thisBaseBoidDirection.x;
 	//		double vy = thisBaseBoidDirection.y;
 	v = repelWall(v, boid);

@@ -66,6 +66,7 @@ void BaseBoid::drawBaseBoid() //TODO:鳥らしく
 void BaseBoid::updatePosition()
 {
 	Direction vector = Direction(angle);
+	
 	double dx = speed * vector.x;
 	double dy = speed * vector.y;
 	x += dx * FLAME_RATE / 1000.0;

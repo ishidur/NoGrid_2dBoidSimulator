@@ -1,8 +1,5 @@
 ﻿#include "stdafx.h"
 #include "Direction.h"
-#include <cmath>
-#include "Point.h"
-//-90 ~ 270 deg
 Direction::Direction(double _angle)
 {
 	angle = _angle;
@@ -23,17 +20,17 @@ Direction::Direction(double _x, double _y)
 		angle = -acos(_y / dist);
 	}
 }
-Direction::Direction(Point p)
+Direction::Direction(Eigen::Vector2d& p)
 {
-	double dist = sqrt(p.x * p.x + p.y * p.y);
-	x = p.x / dist;
-	y = p.y / dist;
-	if (p.x < 0.0)
+	double dist = p.norm();
+	x = p.x() / dist;
+	y = p.y() / dist;
+	if (p.x() < 0.0)
 	{
-		angle = acos(p.y / dist);
+		angle = acos(p.y() / dist);
 	}
 	else
 	{
-		angle = -acos(p.y / dist);
+		angle = -acos(p.y() / dist);
 	}
 }

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Point.h"
+#include "Eigen/Core"
 
 class Direction
 {
@@ -19,5 +19,5 @@ public:
 	 * \param _y 
 	 */
 	Direction(double _x, double _y);
-	Direction(Point point);
+	Direction(Eigen::Vector2d& point);
 };
