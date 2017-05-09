@@ -3,7 +3,6 @@
 
 //TODO: 群れを複数にできるようにしたい
 //TODO: 捕食者
-//TODO: ファイルを分けたい
 //TODO: ブロックを消せるようにしたい 
 //TODO: 引き寄せるブロックも作りたい 
 //TODO: ブロックの中に入れないようにしたい
@@ -26,11 +25,6 @@ int time = 0; //time
 bool isPress = false;
 double mouseX = 0.0;
 double mouseY = 0.0;
-
-//For debug
-//double posX = 1.0;
-//double posY = 1.0;
-//double initAngle = 90.0;
 
 double calcDist(double x1, double y1, double x2, double y2)
 {
@@ -195,7 +189,6 @@ BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 		nbv = Eigen::Vector2d(bSpeedDirection.x, bSpeedDirection.y);
 		double boidDist = calcDist(nearestBaseBoid.x, nearestBaseBoid.y, boid.x, boid.y);
 		Eigen::Vector2d nb = Eigen::Vector2d((nearestBaseBoid.x - boid.x), (nearestBaseBoid.y - boid.y));
-		//TODO: 加減速正しい？
 		Direction bDirection = Direction(nb);
 		double innerPrdct = thisBaseBoidDirection.x * bDirection.x + thisBaseBoidDirection.y * bDirection.y;
 		if (boidDist < OPTIMUM_DISTANCE)
@@ -545,7 +538,6 @@ void timer(int value)
 	{
 		//boid速度ベクトルの計算部分
 		boids[i] = updateAngleAndSpeed(boids[i]);
-		//		boids[i].updateAngleAndSpeed(gx, gy, boids);
 	}
 	glutPostRedisplay();
 	time++;
@@ -572,7 +564,6 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
 		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, i));
-		//		boids[i] = BaseBoid(posX, posY + i, initAngle / 180.0 * M_PI,BOID_SPEED, i);
 		findGrid(i, boids[i].x, boids[i].y);
 		if (i == 0)
 		{
