@@ -125,7 +125,7 @@ std::tuple<BaseBoid, Eigen::Vector2d> findNearestBoid(BaseBoid& boid)
 
 Eigen::Vector2d repelWall(Eigen::Vector2d& p, BaseBoid& boid)
 {
-	Eigen::Vector2d repel=Eigen::Vector2d::Zero();
+	Eigen::Vector2d repel = Eigen::Vector2d::Zero();
 	double dist = BOUNDARY - WALL_SIZE;
 	double bound = dist - BOID_SIZE - OPTIMUM_DISTANCE;
 	if (boid.x >= bound)
@@ -144,7 +144,7 @@ Eigen::Vector2d repelWall(Eigen::Vector2d& p, BaseBoid& boid)
 	{
 		repel.y() = 1.0 / (dist + boid.y);
 	}
-	p = p + REPEL_WALL_WEIGHT*repel;
+	p = p + REPEL_WALL_WEIGHT * repel;
 	return p;
 }
 
@@ -243,7 +243,7 @@ BaseBoid updateAngleAndSpeed(BaseBoid& boid)
 		}
 	}
 	boid.angle = Direction(v).angle;
-	boid.vctr = Eigen::Vector2d(-sin(boid.angle)*boid.speed, cos(boid.angle)*boid.speed);
+	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
 	return boid;
 }
 
@@ -519,7 +519,8 @@ void mouse(int button, int state, int x, int y)
 	}
 }
 
-void key(unsigned char key, int x, int y) {
+void key(unsigned char key, int x, int y)
+{
 	if (key == 'r')
 	{
 		std::cout << "refresh" << std::endl;
@@ -589,7 +590,7 @@ int main(int argc, char* argv[])
 	updateGrids();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
-	glutTimerFunc(FLAME_RATE, timer, time);
+		glutTimerFunc(FLAME_RATE, timer, time);
 	glutMainLoop();
 	return 0;
 }

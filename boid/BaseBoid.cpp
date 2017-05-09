@@ -81,9 +81,19 @@ bool BaseBoid::isVisible(double _x, double _y)
 
 	bool max = maxAngle > M_PI ? bDirection.angle > maxAngle - 2.0 * M_PI : bDirection.angle > maxAngle;
 	bool min = minAngle < -M_PI ? bDirection.angle < minAngle + 2.0 * M_PI : bDirection.angle < minAngle;
-	if (max && min)
+	if (maxAngle <= M_PI && minAngle > -M_PI)
 	{
-		return false;
+		if (max || min)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (max && min)
+		{
+			return false;
+		}
 	}
 	return true;
 }
