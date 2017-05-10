@@ -11,11 +11,17 @@ Block::Block(double _x, double _y, double _r)
 	r = _r;
 }
 
+void Block::setColor(double _red, double _green, double _blue)
+{
+	red = _red;
+	green = _green;
+	blue = _blue;
+}
 void Block::drawBlock()
 {
 	int n = 20;
 	double angl = 2.0 * M_PI / n;
-	glColor3d(0.5, 0.5, 0.5);
+	glColor3d(red, green, blue);
 	glPushMatrix();
 	glTranslated(x, y, 0.0);
 	glBegin(GL_POLYGON);

@@ -11,19 +11,19 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 	/**
-	 * \brief 
-	 * \param _angle 
-	 */
+	* \brief
+	* \param _angle
+	*/
 	Direction(double _angle);
 	/**
-	 * \brief 
-	 * \param _x 
-	 * \param _y 
-	 */
+	* \brief
+	* \param _x
+	* \param _y
+	*/
 	Direction(double _x, double _y);
 	/**
-	 * \brief 
-	 * \param point 
-	 */
+	* \brief
+	* \param point
+	*/
 	Direction(Eigen::Vector2d& point);
 };

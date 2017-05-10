@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "Eigen/Core"
-#include "Eigen/StdVector"
 
 
 class BaseBoid
@@ -45,7 +44,8 @@ public:
 	* \brief
 	* \param x
 	* \param y
+	* \param viewAngle
 	* \return
 	*/
-	bool isVisible(double x, double y);
+	bool isVisible(double x, double y, double viewAngle);
 };

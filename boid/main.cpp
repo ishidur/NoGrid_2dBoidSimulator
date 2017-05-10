@@ -1,11 +1,6 @@
-// boid.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
+// main.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
 //
 
-//TODO: 群れを複数にできるようにしたい
-//TODO: 捕食者
-//TODO: ブロックを消せるようにしたい 
-//TODO: 引き寄せるブロックも作りたい 
-//TODO: ブロックの中に入れないようにしたい
 #include "stdafx.h"
 #include <GL/glut.h>
 #define _USE_MATH_DEFINES
@@ -80,162 +75,131 @@ std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 
 std::vector<BaseBoid> boids;
 
-std::tuple<BaseBoid, Eigen::Vector2d> findNearestBoid(BaseBoid& boid)
+
+double degreeToRadian(double deg)
 {
-	BaseBoid nearestBaseBoid;
-	double minDist = 0.0;
-	Eigen::Vector2d g = Eigen::Vector2d::Zero();
+	return deg * M_PI / 180.0;
+}
+
+//this needs for Biod::isVisible
+double _viewAngle = degreeToRadian(THETA_1) / 2.0;
+
+BaseBoid updateSpeedAndAngle(BaseBoid& boid)
+{
+	Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
+	Eigen::Vector2d q2 = Eigen::Vector2d::Zero();
+	Eigen::Vector2d q3 = Eigen::Vector2d::Zero();
+	Eigen::Vector2d q4 = Eigen::Vector2d::Zero();
+	int n1 = 0;
+	int n2 = 0;
+	int n3 = 0;
+	int n4 = 0;
 	auto indexes = getAroundGridBoids(boid.id, boid.grid_x, boid.grid_y);
+	/*loop starts here*/
 	for (auto i : indexes)
 	{
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
-		g.x() += boids[i].x;
-		g.y() += boids[i].y;
-		if (boid.id == 0 && boid.isVisible(boids[i].x, boids[i].y))
+		if (boid.isVisible(boids[i].x, boids[i].y, _viewAngle))
 		{
-			if (dist > OPTIMUM_DISTANCE)
+			/*boidが見える範囲内にいる*/
+			if (dist - 2.0 * BOID_SIZE < R_1)
 			{
-				boids[i].setColor(0.1, 0.1, 1.0);
+				/*rule1*/
+				n1++;
+				q1 += boids[i].vctr.normalized();
+				if (boid.id == 0)
+				{
+					boids[i].setColor(0.6, 0.6, 1.0);
+				}
 			}
-			else
+			if (dist - 2.0 * BOID_SIZE < R_2)
 			{
-				boids[i].setColor(0.0, 1.0, 1.0);
+				/*rule2*/
+				n2++;
+				q2 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_2;
+				if (boid.id == 0)
+				{
+					boids[i].setColor(0.4, 0.4, 1.0);
+				}
+			}
+			if (dist - 2.0 * BOID_SIZE < R_3)
+			{
+				/*rule3*/
+				n3++;
+				q3 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_3;
+				if (boid.id == 0)
+				{
+					boids[i].setColor(0.2, 0.2, 1.0);
+				}
 			}
 		}
+	}
+	/*loop ends here*/
 
-		if (boid.isVisible(boids[i].x, boids[i].y) && (minDist == 0.0 || minDist >= dist) && dist != 0.0)
-		{
-			nearestBaseBoid = boids[i];
-			minDist = dist;
-		}
-	}
-	if (indexes.size() != 0)
-	{
-		g.x() /= indexes.size();
-		g.y() /= indexes.size();
-	}
-	return std::forward_as_tuple(nearestBaseBoid, g);
-}
-
-Eigen::Vector2d repelWall(Eigen::Vector2d& p, BaseBoid& boid)
-{
-	Eigen::Vector2d repel = Eigen::Vector2d::Zero();
-	double dist = BOUNDARY - WALL_SIZE;
-	double bound = dist - BOID_SIZE - OPTIMUM_DISTANCE;
-	if (boid.x >= bound)
-	{
-		repel.x() = -1.0 / (dist - boid.x);
-	}
-	else if (boid.x <= -bound)
-	{
-		repel.x() = 1.0 / (dist + boid.x);
-	}
-	if (boid.y >= bound)
-	{
-		repel.y() = -1.0 / (dist - boid.y);
-	}
-	else if (boid.y <= -bound)
-	{
-		repel.y() = 1.0 / (dist + boid.y);
-	}
-	p = p + REPEL_WALL_WEIGHT * repel;
-	return p;
-}
-
-Eigen::Vector2d repelBlock(Eigen::Vector2d& p, BaseBoid& boid)
-{
+	Eigen::Vector2d wallRepel = Eigen::Vector2d::Zero();
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
 		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
-		if (dist - BLOCK_SIZE - BOID_SIZE <= OPTIMUM_DISTANCE && !blocks[n].disabled)
+		if (dist - BLOCK_SIZE - BOID_SIZE <= R_4 && !blocks[n].disabled)
 		{
-			// repel
-			p.x() += -REPEL_WEIGHT * (blocks[n].x - boid.x) / dist / dist * OPTIMUM_DISTANCE;
-			p.y() += -REPEL_WEIGHT * (blocks[n].y - boid.y) / dist / dist * OPTIMUM_DISTANCE;
+			/*rule4*/
+			n4++;
+			q4 += Eigen::Vector2d(blocks[n].x - boid.x, blocks[n].y - boid.y) / dist / dist * R_4;
 		}
 	}
 	if (isPress)
 	{
 		double dist = calcDist(boid.x, boid.y, mouseX, mouseY);
-		if (dist <= OPTIMUM_DISTANCE)
+		if (dist - BOID_SIZE <= R_4)
 		{
-			// repel
-			p.x() += -REPEL_WEIGHT * (mouseX - boid.x) / dist / dist * OPTIMUM_DISTANCE;
-			p.y() += -REPEL_WEIGHT * (mouseY - boid.y) / dist / dist * OPTIMUM_DISTANCE;
+			/*rule4*/
+			n4++;
+			q4 += Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_4;
 		}
 	}
-	return p;
-}
-
-//TODO: it is too long
-BaseBoid updateAngleAndSpeed(BaseBoid& boid)
-{
-	BaseBoid nearestBaseBoid;
-	Eigen::Vector2d g;
-	std::tie(nearestBaseBoid, g) = findNearestBoid(boid);
-	double dist = calcDist(g.x(), g.y(), boid.x, boid.y);
-	Eigen::Vector2d gv = Eigen::Vector2d(g.x() - boid.x, g.y() - boid.y);
-	gv /= dist;
-	Eigen::Vector2d gd = Eigen::Vector2d::Zero();
-	if (g != Eigen::Vector2d::Zero())
+	if (n1 != 0)
 	{
-		gd = gv;
+		q1 /= double(n1);
 	}
-	Direction bSpeedDirection = Direction(nearestBaseBoid.angle);
-	Direction thisBaseBoidDirection = Direction(boid.angle);
-	Eigen::Vector2d nbv = Eigen::Vector2d::Zero();
-	if (nearestBaseBoid.id != -1)
+	if (n2 != 0)
 	{
-		nbv = Eigen::Vector2d(bSpeedDirection.x, bSpeedDirection.y);
-		double boidDist = calcDist(nearestBaseBoid.x, nearestBaseBoid.y, boid.x, boid.y);
-		Eigen::Vector2d nb = Eigen::Vector2d((nearestBaseBoid.x - boid.x), (nearestBaseBoid.y - boid.y));
-		Direction bDirection = Direction(nb);
-		double innerPrdct = thisBaseBoidDirection.x * bDirection.x + thisBaseBoidDirection.y * bDirection.y;
-		if (boidDist < OPTIMUM_DISTANCE)
-		{
-			//close
-			if (innerPrdct >= 0.0)
-			{
-				//front
-				boid.speed /= ACCEL;
-			}
-			else
-			{
-				//back
-				boid.speed *= ACCEL;
-			}
-		}
-		else if (boidDist > OPTIMUM_DISTANCE)
-		{
-			//far
-			if (innerPrdct >= 0.0)
-			{
-				//front
-				boid.speed *= ACCEL;
-			}
-			else
-			{
-				//back
-				boid.speed /= ACCEL;
-			}
-		}
-		if (boid.speed < MINSPEED)
-		{
-			boid.speed = MINSPEED;
-		}
-		else if (boid.speed > MAXSPEED)
-		{
-			boid.speed = MAXSPEED;
-		}
+		q2 /= double(n2);
 	}
-	Eigen::Vector2d v = thisBaseBoidDirection.vector + CENTRIPETAL_WEIGHT * gd + ALIGNMENT_WEIGHT * nbv;
-	v = repelWall(v, boid);
-	v = repelBlock(v, boid);
+	if (n3 != 0)
+	{
+		q3 /= double(n3);
+	}
+	if (n4 != 0)
+	{
+		q4 /= double(n4);
+	}
 
-	boid.angle = Direction(v).angle;
+	/*wall repel*/
+	double wall = BOUNDARY - WALL_SIZE;
+	double bound = wall - BOID_SIZE - R_4;
+	if (boid.x >= bound)
+	{
+		wallRepel.x() = 1.0 / (wall - boid.x);
+	}
+	else if (boid.x <= -bound)
+	{
+		wallRepel.x() = -1.0 / (wall + boid.x);
+	}
+	if (boid.y >= bound)
+	{
+		wallRepel.y() = 1.0 / (wall - boid.y);
+	}
+	else if (boid.y <= -bound)
+	{
+		wallRepel.y() = -1.0 / (wall + boid.y);
+	};
+	Eigen::Vector2d V = ALPHA_1 * q1.normalized() + ALPHA_2 * q2 - ALPHA_3 * q3 - ALPHA_4 * q4 + ALPHA_5 * boid.vctr.normalized() - REPEL_WALL_WEIGHT * wallRepel;
+	boid.angle = Direction(V).angle;
+	boid.speed = BETA * log(V.norm() + 1.0);
 	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
 	return boid;
 }
+
 
 void drawWall()
 {
@@ -497,7 +461,7 @@ void mouse(int button, int state, int x, int y)
 	{
 		if (state == GLUT_DOWN)
 		{
-			std::cout << "pressing [" << pos_x << ", " << pos_y << "]" << std::endl;
+			std::cout << "pressing" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			isPress = true;
@@ -509,12 +473,32 @@ void mouse(int button, int state, int x, int y)
 	}
 }
 
+void motion(int x, int y)
+{
+	if (isPress)
+	{
+		double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+		double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+		mouseX = pos_x;
+		mouseY = pos_y;
+	}
+}
+
 void key(unsigned char key, int x, int y)
 {
 	if (key == 'r')
 	{
 		std::cout << "refresh" << std::endl;
 		removeAllBlocks();
+	}
+	if (key == 'b')
+	{
+		removeAllBlocks();
+		for (int i = 0; i < BLOCK_NO; ++i)
+		{
+			blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
+			whereBlock(i, blocks[i].x, blocks[i].y);
+		}
 	}
 }
 
@@ -537,7 +521,7 @@ void timer(int value)
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
 		//boid速度ベクトルの計算部分
-		boids[i] = updateAngleAndSpeed(boids[i]);
+		boids[i] = updateSpeedAndAngle(boids[i]);
 	}
 	glutPostRedisplay();
 	time++;
@@ -557,6 +541,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
 	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
 	glutKeyboardFunc(key);
 	init();
 	createGrids();
@@ -572,7 +557,7 @@ int main(int argc, char* argv[])
 	}
 	for (int i = 0; i < BLOCK_NO; ++i)
 	{
-		blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) / RAND_MAX, BLOCK_SIZE));
+		blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
 		whereBlock(i, blocks[i].x, blocks[i].y);
 	}
 	updateGrids();

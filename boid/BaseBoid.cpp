@@ -5,7 +5,7 @@
 #include "Direction.h"
 #include "parameters.h" //import common parameters
 
-//境界条件: 壁
+//‹«ŠEðŒ: •Ç
 double checkBoundary(double pos)
 {
 	if (pos > BOUNDARY - WALL_SIZE)
@@ -24,14 +24,6 @@ double radianToDegree(double rad)
 	return rad * 180.0 / M_PI;
 }
 
-double degreeToRadian(double deg)
-{
-	return deg * M_PI / 180.0;
-}
-
-//this needs for Biod::isVisible
-double _viewAngle = degreeToRadian(VIEW_ANGLE) / 2.0;
-
 BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
 {
 	id = _id;
@@ -49,7 +41,7 @@ void BaseBoid::setColor(double red, double green, double blue)
 	b = blue;
 }
 
-void BaseBoid::drawBaseBoid() //TODO:鳥らしく
+void BaseBoid::drawBaseBoid() //TODO:’¹‚ç‚µ‚­
 {
 	glColor3d(r, g, b);
 	glPushMatrix();
@@ -71,7 +63,7 @@ void BaseBoid::updatePosition()
 	y = checkBoundary(y);
 }
 
-bool BaseBoid::isVisible(double _x, double _y)
+bool BaseBoid::isVisible(double _x, double _y, double _viewAngle)
 {
 	double dx = _x - x;
 	double dy = _y - y;
