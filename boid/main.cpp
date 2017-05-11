@@ -33,15 +33,14 @@ std::vector<Block> blocks;
 //this function needs grids
 std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 {
-	std::vector<int> indexes = grids[grid_y][grid_x].boidIndexes;
-	indexes.insert(indexes.end(), grids[grid_y - 1][grid_x].boidIndexes.begin(), grids[grid_y - 1][grid_x].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y - 1][grid_x - 1].boidIndexes.begin(), grids[grid_y - 1][grid_x - 1].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y - 1][grid_x + 1].boidIndexes.begin(), grids[grid_y - 1][grid_x + 1].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y + 1][grid_x].boidIndexes.begin(), grids[grid_y + 1][grid_x].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y + 1][grid_x - 1].boidIndexes.begin(), grids[grid_y + 1][grid_x - 1].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y + 1][grid_x + 1].boidIndexes.begin(), grids[grid_y + 1][grid_x + 1].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y][grid_x - 1].boidIndexes.begin(), grids[grid_y][grid_x - 1].boidIndexes.end());
-	indexes.insert(indexes.end(), grids[grid_y][grid_x + 1].boidIndexes.begin(), grids[grid_y][grid_x + 1].boidIndexes.end());
+	std::vector<int> indexes;
+	for (int i = -1; i <= 1; ++i)
+	{
+		for (int j = -1; j <= 1; ++j)
+		{
+			indexes.insert(indexes.end(), grids[grid_y + j][grid_x + i].boidIndexes.begin(), grids[grid_y + j][grid_x + i].boidIndexes.end());
+		}
+	}
 	auto result = remove(indexes.begin(), indexes.end(), id);
 	auto result2 = unique(indexes.begin(), result);
 	indexes.erase(result2, indexes.end());
@@ -283,15 +282,13 @@ void whereBlock(int index, double x, double y)
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width));
 	int gridy = int(ceil((BOUNDARY + y) / width));
-	grids[gridy][gridx].addBlockByIndex(index);
-	grids[gridy][gridx - 1].addBlockByIndex(index);
-	grids[gridy - 1][gridx - 1].addBlockByIndex(index);
-	grids[gridy + 1][gridx - 1].addBlockByIndex(index);
-	grids[gridy][gridx + 1].addBlockByIndex(index);
-	grids[gridy - 1][gridx + 1].addBlockByIndex(index);
-	grids[gridy + 1][gridx + 1].addBlockByIndex(index);
-	grids[gridy - 1][gridx].addBlockByIndex(index);
-	grids[gridy + 1][gridx].addBlockByIndex(index);
+	for (int i = -1; i <= 1; ++i)
+	{
+		for (int j = -1; j <= 1; ++j)
+		{
+			grids[gridy + i][gridx + j].addBlockByIndex(index);
+		}
+	}
 }
 
 void removeBlock(int index, double x, double y)
@@ -299,15 +296,13 @@ void removeBlock(int index, double x, double y)
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width));
 	int gridy = int(ceil((BOUNDARY - y) / width));
-	grids[gridy][gridx].deleteBlockByIndex(index);
-	grids[gridy][gridx - 1].deleteBlockByIndex(index);
-	grids[gridy - 1][gridx - 1].deleteBlockByIndex(index);
-	grids[gridy + 1][gridx - 1].deleteBlockByIndex(index);
-	grids[gridy][gridx + 1].deleteBlockByIndex(index);
-	grids[gridy - 1][gridx + 1].deleteBlockByIndex(index);
-	grids[gridy + 1][gridx + 1].deleteBlockByIndex(index);
-	grids[gridy - 1][gridx].deleteBlockByIndex(index);
-	grids[gridy + 1][gridx].deleteBlockByIndex(index);
+	for (int i = -1; i <= 1; ++i)
+	{
+		for (int j = -1; j <= 1; ++j)
+		{
+			grids[gridy + i][gridx + j].deleteBlockByIndex(index);
+		}
+	}
 	blocks[index].setDisabled();
 }
 
