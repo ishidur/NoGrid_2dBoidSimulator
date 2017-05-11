@@ -210,16 +210,16 @@ void createGrids()
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	double left;
-	double top = BOUNDARY + width;
+	double top = -BOUNDARY - width;
 	for (int i = 0; i < GRID_NO + 2; ++i)
 	{
 		left = -BOUNDARY - width;
 		for (int j = 0; j < GRID_NO + 2; ++j)
 		{
-			grids[i][j] = Grid(top, top - width, left, left + width);
+			grids[i][j] = Grid(top, top + width, left, left + width);
 			left += width;
 		}
-		top -= width;
+		top += width;
 	}
 }
 
@@ -272,7 +272,7 @@ void findGrid(int index, double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY - y) / width));
+	int gridy = int(ceil((BOUNDARY + y) / width));
 	grids[gridy][gridx].addBoidByIndex(index);
 	boids[index].grid_x = gridx;
 	boids[index].grid_y = gridy;
@@ -282,7 +282,7 @@ void whereBlock(int index, double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY - y) / width));
+	int gridy = int(ceil((BOUNDARY + y) / width));
 	grids[gridy][gridx].addBlockByIndex(index);
 	grids[gridy][gridx - 1].addBlockByIndex(index);
 	grids[gridy - 1][gridx - 1].addBlockByIndex(index);
@@ -327,7 +327,7 @@ int findDuplicateBlock(double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY - y) / width));
+	int gridy = int(ceil((BOUNDARY + y) / width));
 	for (auto i : grids[gridy][gridx].blockIndexes)
 	{
 		double dist = calcDist(x, y, blocks[i].x, blocks[i].y);
