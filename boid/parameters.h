@@ -5,8 +5,9 @@
 #define WALL_SIZE 5.0 //size of wall
 #define BLOCK_SIZE 10.0 //size of block
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 50 //number of boids
-#define BLOCK_NO 50 //number of blocks
+#define BOIDS_NO 0 //number of boids
+#define BLOCK_NO 0 //number of blocks
+#define CIRCLE_SLICE 10 //circle slices
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 500.0 //area boundary

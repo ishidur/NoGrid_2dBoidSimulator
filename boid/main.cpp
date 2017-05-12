@@ -350,6 +350,21 @@ void display(void)
 			block.drawBlock();
 		}
 	}
+	if (isPress)
+	{
+		GLdouble mouseColor[] = {0.8,0.0,0.3};
+		double angl = 2.0 * M_PI / CIRCLE_SLICE;
+		glColor3d(mouseColor[0], mouseColor[1], mouseColor[2]);
+		glPushMatrix();
+		glTranslated(mouseX, mouseY, 0.0);
+		glBegin(GL_POLYGON);
+		for (int i = 0; i < CIRCLE_SLICE; ++i)
+		{
+			glVertex2d(BLOCK_SIZE * cos(double(i) * angl), BLOCK_SIZE * sin(double(i) * angl));
+		}
+		glEnd();
+		glPopMatrix();
+	}
 	glFlush();
 }
 
@@ -364,21 +379,7 @@ void mouse(int button, int state, int x, int y)
 {
 	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
-	{
-		int index = findDuplicateBlock(pos_x, pos_y);
-		if (index != -1)
-		{
-			std::cout << "exist" << index << std::endl;
-			removeBlock(index, pos_x, pos_y);
-		}
-		else
-		{
-			blocks.push_back(Block(pos_x, pos_y, BLOCK_SIZE));
-			whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
-		}
-	}
-	if (button == GLUT_RIGHT_BUTTON)
+	if (button == GLUT_LEFT_BUTTON)
 	{
 		if (state == GLUT_DOWN)
 		{
@@ -407,18 +408,51 @@ void motion(int x, int y)
 
 void key(unsigned char key, int x, int y)
 {
+	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	if (key == 'r')
 	{
 		std::cout << "refresh" << std::endl;
-		removeAllBlocks();
 	}
-	if (key == 'b')
+	if (key == 'i')
 	{
 		removeAllBlocks();
 		for (int i = 0; i < BLOCK_NO; ++i)
 		{
 			blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
 			whereBlock(i, blocks[i].x, blocks[i].y);
+		}
+	}
+	if (key == 'b')
+	{
+		int index = findDuplicateBlock(pos_x, pos_y);
+		if (index != -1)
+		{
+			std::cout << "exist" << index << std::endl;
+			removeBlock(index, pos_x, pos_y);
+		}
+		else
+		{
+			blocks.push_back(Block(pos_x, pos_y, BLOCK_SIZE));
+			whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
+		}
+	}
+	if (key == 'a')
+	{
+		double bound = BOUNDARY - BOID_SIZE - WALL_SIZE;
+		if (pos_x > bound || pos_x < -bound || pos_y > bound || pos_y < -bound)
+		{
+			std::cout << "out of range" << std::endl;
+		}
+		else
+		{
+			int index = boids.size();
+			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, index));
+			if (index == 0)
+			{
+				boids[index].setColor(1.0, 0.0, 0.0);
+			}
+			findGrid(index, boids[index].x, boids[index].y);
 		}
 	}
 }
@@ -429,7 +463,7 @@ void timer(int value)
 	//	{
 	//		cout << time / 10 << endl;
 	//	}
-	for (int i = 0; i < BOIDS_NO; i++)
+	for (int i = 0; i < boids.size(); i++)
 	{
 		boids[i].updatePosition();
 		if (i != 0)
@@ -439,7 +473,7 @@ void timer(int value)
 		findGrid(i, boids[i].x, boids[i].y);
 	}
 	updateGrids();
-	for (int i = 0; i < BOIDS_NO; i++)
+	for (int i = 0; i < boids.size(); i++)
 	{
 		//boid速度ベクトルの計算部分
 		boids[i] = updateSpeedAndAngle(boids[i]);

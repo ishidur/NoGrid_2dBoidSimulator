@@ -18,15 +18,15 @@ public:
 	int grid_y = -1; //grid address y
 	int grid_x = -1; //grid address x
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-		/**
-		* \brief
-		* \param x
-		* \param y
-		* \param angle
-		* \param speed
-		* \param id
-		*/
-		BaseBoid(double x = 0.0, double y = 0.0, double angle = 0.0, double speed = 0.0, int id = -1);
+	/**
+	* \brief
+	* \param x
+	* \param y
+	* \param angle
+	* \param speed
+	* \param id
+	*/
+	BaseBoid(double x = 0.0, double y = 0.0, double angle = 0.0, double speed = 0.0, int id = -1);
 
 	/**
 	* \brief
