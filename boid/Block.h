@@ -11,6 +11,12 @@ public:
 	double x; //center x
 	double y; //center y
 	double r; //radius
+	/**
+	 * \brief 
+	 * \param x: x-pos
+	 * \param y: y-pos 
+	 * \param r: radius
+	 */
 	Block(double x, double y, double r);
 
 	/**
