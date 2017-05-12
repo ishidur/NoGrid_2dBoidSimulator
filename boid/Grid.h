@@ -13,37 +13,37 @@ public:
 	std::vector<int> blockIndexes;
 
 	/**
-	* \brief
-	* \param _top
-	* \param _bottom
-	* \param _left
-	* \param _right
+	* \brief top > bottom, right > left
+	* \param top: y-axis
+	* \param bottom: y-axis
+	* \param left: x-axis
+	* \param right: x-axis
 	*/
-	Grid(double _top = 0.0, double _bottom = 0.0, double _left = 0.0, double _right = 0.0);
+	Grid(double top = 0.0, double bottom = 0.0, double left = 0.0, double right = 0.0);
 	/**
 	* \brief
-	* \param index
+	* \param index: boid-id
 	*/
 	void addBoidByIndex(int index);
 	/**
 	* \brief
-	* \param index
+	* \param index: boid-id
 	*/
 	void deleteBoidByIndex(int index);
 	/**
 	* \brief
-	* \param index
+	* \param index: boid-id
 	* \return
 	*/
 	bool findBoidByIndex(int index);
 	/**
 	* \brief
-	* \param index
+	* \param index: block-id
 	*/
 	void addBlockByIndex(int index);
 	/**
 	* \brief
-	* \param index
+	* \param index: block-id
 	*/
 	void deleteBlockByIndex(int index);
 	/**

@@ -12,18 +12,18 @@ public:
 
 	/**
 	* \brief
-	* \param _angle
+	* \param angle: y-axis is 0, left cycle
 	*/
-	Direction(double _angle);
+	Direction(double angle);
 	/**
 	* \brief
-	* \param _x
-	* \param _y
+	* \param x: right is plus
+	* \param y: top is plus
 	*/
-	Direction(double _x, double _y);
+	Direction(double x, double y);
 	/**
 	* \brief
-	* \param point
+	* \param vector: Eigen vector
 	*/
-	Direction(Eigen::Vector2d& point);
+	Direction(Eigen::Vector2d& vector);
 };

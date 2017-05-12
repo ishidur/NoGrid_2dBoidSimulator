@@ -17,7 +17,7 @@
 #include "Eigen/Core"
 
 int time = 0; //time
-bool isPress = false;
+int mouseState = 0; //0 is not pressed, 1 is distractor, 2 is attractor
 double mouseX = 0.0;
 double mouseY = 0.0;
 
@@ -77,7 +77,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 			/*boidが見える範囲内にいる*/
 			if (dist - 2.0 * BOID_SIZE < R_1)
 			{
-				/*rule1*/
+				/*rule1: together*/
 				n1++;
 				q1 += boids[i].vctr.normalized();
 				if (boid.id == 0)
@@ -87,7 +87,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 			}
 			if (dist - 2.0 * BOID_SIZE < R_2)
 			{
-				/*rule2*/
+				/*rule2: close*/
 				n2++;
 				q2 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_2;
 				if (boid.id == 0)
@@ -97,7 +97,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 			}
 			if (dist - 2.0 * BOID_SIZE < R_3)
 			{
-				/*rule3*/
+				/*rule3: away*/
 				n3++;
 				q3 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_3;
 				if (boid.id == 0)
@@ -115,19 +115,38 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
 		if (dist - BLOCK_SIZE - BOID_SIZE <= R_4 && !blocks[n].disabled)
 		{
-			/*rule4*/
+			/*rule4: block*/
 			n4++;
 			q4 += Eigen::Vector2d(blocks[n].x - boid.x, blocks[n].y - boid.y) / dist / dist * R_4;
 		}
 	}
-	if (isPress)
+	/*mouse*/
+	if (mouseState != 0)
 	{
 		double dist = calcDist(boid.x, boid.y, mouseX, mouseY);
-		if (dist - BOID_SIZE <= R_4)
+		if (mouseState == 1)
 		{
-			/*rule4*/
-			n4++;
-			q4 += Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_4;
+			if (dist - MOUSE_SIZE - BOID_SIZE <= R_4)
+			{
+				/*rule4: block*/
+				n4++;
+				q4 += MOUSE_DISTRACTION_FORCE * Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_4;
+			}
+		}
+		if (mouseState == 2)
+		{
+			if (dist - MOUSE_SIZE - BOID_SIZE < R_2)
+			{
+				/*rule2: close*/
+				n2++;
+				q2 += MOUSE_ATTRACTION_FORCE * Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_2;
+			}
+			if (dist - MOUSE_SIZE - BOID_SIZE < R_3)
+			{
+				/*rule3: away*/
+				n3++;
+				q3 += Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_3;
+			}
 		}
 	}
 	if (n1 != 0)
@@ -252,10 +271,6 @@ void coloringGrids()
 			{
 				glColor3d(0.3, 0.3, 0.3);
 			}
-			//			if (find(grids[i][j].blockIndexes.begin(), grids[i][j].blockIndexes.end(), 0) != grids[i][j].blockIndexes.end())
-			//			{
-			//				glColor3d(0.3, 0.3, 0.3);
-			//			}
 			glBegin(GL_POLYGON);
 			glVertex2d(grids[i][j].left, grids[i][j].top);
 			glVertex2d(grids[i][j].left, grids[i][j].bottom);
@@ -350,6 +365,39 @@ void display(void)
 			block.drawBlock();
 		}
 	}
+	if (mouseState != 0)
+	{
+		GLdouble r = 0.0;
+		GLdouble g = 0.0;
+		GLdouble b = 0.0;
+		switch (mouseState)
+		{
+		case 1:
+			r = 0.8;
+			g = 0.0;
+			b = 0.3;
+			break;
+		case 2:
+			r = 0.0;
+			g = 0.8;
+			b = 0.3;
+			break;
+		default:
+			break;
+		}
+
+		double angl = 2.0 * M_PI / CIRCLE_SLICE;
+		glColor3d(r, g, b);
+		glPushMatrix();
+		glTranslated(mouseX, mouseY, 0.0);
+		glBegin(GL_POLYGON);
+		for (int i = 0; i < CIRCLE_SLICE; ++i)
+		{
+			glVertex2d(BLOCK_SIZE * cos(double(i) * angl), BLOCK_SIZE * sin(double(i) * angl));
+		}
+		glEnd();
+		glPopMatrix();
+	}
 	glFlush();
 }
 
@@ -364,8 +412,63 @@ void mouse(int button, int state, int x, int y)
 {
 	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
 	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	if (state == GLUT_DOWN)
 	{
+		if (button == GLUT_LEFT_BUTTON)
+		{
+			std::cout << "distractor" << std::endl;
+			mouseX = pos_x;
+			mouseY = pos_y;
+			mouseState = 1;
+		}
+		if (button == GLUT_RIGHT_BUTTON)
+		{
+			std::cout << "attractor" << std::endl;
+			mouseX = pos_x;
+			mouseY = pos_y;
+			mouseState = 2;
+		}
+	}
+	else
+	{
+		mouseState = 0;
+	}
+}
+
+void motion(int x, int y)
+{
+	if (mouseState != 0)
+	{
+		double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+		double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+		mouseX = pos_x;
+		mouseY = pos_y;
+	}
+}
+
+void key(unsigned char key, int x, int y)
+{
+	double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+	double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
+	if (key == 'r')
+	{
+		/*remove all blocks*/
+		removeAllBlocks();
+		std::cout << "refresh" << std::endl;
+	}
+	if (key == 'i')
+	{
+		/*initialize blocks*/
+		removeAllBlocks();
+		for (int i = 0; i < BLOCK_NO; ++i)
+		{
+			blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
+			whereBlock(i, blocks[i].x, blocks[i].y);
+		}
+	}
+	if (key == 'b')
+	{
+		/*add block*/
 		int index = findDuplicateBlock(pos_x, pos_y);
 		if (index != -1)
 		{
@@ -378,47 +481,24 @@ void mouse(int button, int state, int x, int y)
 			whereBlock(blocks.size() - 1, blocks[blocks.size() - 1].x, blocks[blocks.size() - 1].y);
 		}
 	}
-	if (button == GLUT_RIGHT_BUTTON)
+	if (key == 'a')
 	{
-		if (state == GLUT_DOWN)
+		/*add boid*/
+		/*add boid*/
+		double bound = BOUNDARY - BOID_SIZE - WALL_SIZE;
+		if (pos_x > bound || pos_x < -bound || pos_y > bound || pos_y < -bound)
 		{
-			std::cout << "pressing" << std::endl;
-			mouseX = pos_x;
-			mouseY = pos_y;
-			isPress = true;
+			std::cout << "out of range" << std::endl;
 		}
 		else
 		{
-			isPress = false;
-		}
-	}
-}
-
-void motion(int x, int y)
-{
-	if (isPress)
-	{
-		double pos_x = BOUNDARY * (double(x) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
-		double pos_y = -BOUNDARY * (double(y) - WINDOW_SIZE / 2.0) / double(WINDOW_SIZE / 2.0);
-		mouseX = pos_x;
-		mouseY = pos_y;
-	}
-}
-
-void key(unsigned char key, int x, int y)
-{
-	if (key == 'r')
-	{
-		std::cout << "refresh" << std::endl;
-		removeAllBlocks();
-	}
-	if (key == 'b')
-	{
-		removeAllBlocks();
-		for (int i = 0; i < BLOCK_NO; ++i)
-		{
-			blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
-			whereBlock(i, blocks[i].x, blocks[i].y);
+			int index = boids.size();
+			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, index));
+			if (index == 0)
+			{
+				boids[index].setColor(1.0, 0.0, 0.0);
+			}
+			findGrid(index, boids[index].x, boids[index].y);
 		}
 	}
 }
@@ -429,7 +509,7 @@ void timer(int value)
 	//	{
 	//		cout << time / 10 << endl;
 	//	}
-	for (int i = 0; i < BOIDS_NO; i++)
+	for (int i = 0; i < boids.size(); i++)
 	{
 		boids[i].updatePosition();
 		if (i != 0)
@@ -439,7 +519,7 @@ void timer(int value)
 		findGrid(i, boids[i].x, boids[i].y);
 	}
 	updateGrids();
-	for (int i = 0; i < BOIDS_NO; i++)
+	for (int i = 0; i < boids.size(); i++)
 	{
 		//boid速度ベクトルの計算部分
 		boids[i] = updateSpeedAndAngle(boids[i]);

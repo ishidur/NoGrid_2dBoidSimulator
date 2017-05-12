@@ -3,6 +3,7 @@
 #include <GL/glut.h>
 #include <corecrt_math_defines.h>
 #include <cmath>
+#include "parameters.h"
 
 Block::Block(double _x, double _y, double _r)
 {
@@ -19,13 +20,12 @@ void Block::setColor(double _red, double _green, double _blue)
 }
 void Block::drawBlock()
 {
-	int n = 20;
-	double angl = 2.0 * M_PI / n;
+	double angl = 2.0 * M_PI / CIRCLE_SLICE;
 	glColor3d(red, green, blue);
 	glPushMatrix();
 	glTranslated(x, y, 0.0);
 	glBegin(GL_POLYGON);
-	for (int i = 0; i < n; ++i)
+	for (int i = 0; i < CIRCLE_SLICE; ++i)
 	{
 		glVertex2d(r * cos(double(i) * angl), r * sin(double(i) * angl));
 	}

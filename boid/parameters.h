@@ -1,16 +1,20 @@
 #pragma once
 /*prameters*/
-#define GRID_NO 15 //number of grid; boid can see around 1 grid
-#define BOID_SIZE 10.0 //size of boid
+#define GRID_NO 15 //number of grid; boid can find around 1 grid
 #define WALL_SIZE 5.0 //size of wall
+#define BOID_SIZE 10.0 //size of boid
 #define BLOCK_SIZE 10.0 //size of block
+#define MOUSE_SIZE 10.0 //size of mouse pointer
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 50 //number of boids
-#define BLOCK_NO 50 //number of blocks
+#define BOIDS_NO 0 //initial number of boids
+#define BLOCK_NO 0 //initial number of blocks
+#define CIRCLE_SLICE 10 //circle slices
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 600 //window size
 #define BOUNDARY 500.0 //area boundary
 #define REPEL_WALL_WEIGHT 30.0 //repel force weight
+#define MOUSE_ATTRACTION_FORCE 5.0 //mouse attraction weight
+#define MOUSE_DISTRACTION_FORCE 2.0 //mouse distraction weight
 #define ALPHA_1 0.5 //rule1 weight
 #define ALPHA_2 1.1 //rule2 weight
 #define ALPHA_3 2.0 //rule3 weight
