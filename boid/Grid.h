@@ -38,6 +38,10 @@ public:
 	bool findBoidByIndex(int index);
 	/**
 	* \brief
+	*/
+	void deleteAllBoids();
+	/**
+	* \brief
 	* \param index: block-id
 	*/
 	void addBlockByIndex(int index);
