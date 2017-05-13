@@ -266,7 +266,7 @@ void coloringGrids()
 	{
 		for (int j = 1; j < GRID_NO + 1; ++j)
 		{
-			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 0.0);
+			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 1.0- double(i) / (GRID_NO + 1));
 			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
 			{
 				glColor3d(0.3, 0.3, 0.3);
