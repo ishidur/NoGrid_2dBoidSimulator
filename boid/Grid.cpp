@@ -30,6 +30,10 @@ bool Grid::findBoidByIndex(int index)
 	}
 	return false;
 }
+void Grid::deleteAllBoids()
+{
+	boidIndexes.clear();
+}
 void Grid::addBlockByIndex(int index)
 {
 	blockIndexes.push_back(index);

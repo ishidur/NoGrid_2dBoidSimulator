@@ -266,7 +266,7 @@ void coloringGrids()
 	{
 		for (int j = 1; j < GRID_NO + 1; ++j)
 		{
-			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 0.0);
+			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 1.0- double(i) / (GRID_NO + 1));
 			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
 			{
 				glColor3d(0.3, 0.3, 0.3);
@@ -331,6 +331,18 @@ void removeAllBlocks()
 		}
 	}
 	blocks.clear();
+}
+
+void removeAllBoids()
+{
+	for (int i = 0; i < GRID_NO + 2; ++i)
+	{
+		for (int j = 0; j < GRID_NO + 2; ++j)
+		{
+			grids[i][j].deleteAllBoids();
+		}
+	}
+	boids.clear();
 }
 
 int findDuplicateBlock(double x, double y)
@@ -464,6 +476,17 @@ void key(unsigned char key, int x, int y)
 		{
 			blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
 			whereBlock(i, blocks[i].x, blocks[i].y);
+		}
+		/*initialize boids*/
+		removeAllBoids();
+		for (int i = 0; i < BOIDS_NO; i++)
+		{
+			boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, i));
+			findGrid(i, boids[i].x, boids[i].y);
+			if (i == 0)
+			{
+				boids[i].setColor(1.0, 0.0, 0.0);
+			}
 		}
 	}
 	if (key == 'b')
