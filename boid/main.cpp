@@ -186,6 +186,11 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 		wallRepel.y() = -1.0 / (wall + boid.y);
 	};
 	Eigen::Vector2d V = ALPHA_1 * q1.normalized() + ALPHA_2 * q2 - ALPHA_3 * q3 - ALPHA_4 * q4 + ALPHA_5 * boid.vctr.normalized() - REPEL_WALL_WEIGHT * wallRepel;
+	boid.q1 = ALPHA_1 * q1.normalized();
+	boid.q2 = ALPHA_2 * q2;
+	boid.q3 = -ALPHA_3 * q3;
+	boid.q4 = -ALPHA_4 * q4;
+	boid.q5 = ALPHA_5 * boid.vctr.normalized();
 	boid.angle = Direction(V).angle;
 	boid.speed = BETA * log(V.norm() + 1.0);
 	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
@@ -266,11 +271,11 @@ void coloringGrids()
 	{
 		for (int j = 1; j < GRID_NO + 1; ++j)
 		{
-			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 1.0- double(i) / (GRID_NO + 1));
-			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
-			{
-				glColor3d(0.3, 0.3, 0.3);
-			}
+			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 1.0 - double(i) / (GRID_NO + 1));
+			//			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
+			//			{
+			//				glColor3d(0.3, 0.3, 0.3);
+			//			}
 			glBegin(GL_POLYGON);
 			glVertex2d(grids[i][j].left, grids[i][j].top);
 			glVertex2d(grids[i][j].left, grids[i][j].bottom);
@@ -369,6 +374,10 @@ void display(void)
 	for (auto boid : boids)
 	{
 		boid.drawBaseBoid();
+		if (boid.id == 0)
+		{
+			boid.visualizeBoidVector();
+		}
 	}
 	for (auto block : blocks)
 	{

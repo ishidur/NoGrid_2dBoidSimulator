@@ -41,7 +41,7 @@ void BaseBoid::setColor(double red, double green, double blue)
 	b = blue;
 }
 
-void BaseBoid::drawBaseBoid() //TODO:’¹‚ç‚µ‚­
+void BaseBoid::drawBaseBoid()
 {
 	glColor3d(r, g, b);
 	glPushMatrix();
@@ -51,6 +51,39 @@ void BaseBoid::drawBaseBoid() //TODO:’¹‚ç‚µ‚­
 	glVertex2d(0.0, BOID_SIZE);
 	glVertex2d(-0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
 	glVertex2d(0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
+	glEnd();
+	glPopMatrix();
+}
+
+void BaseBoid::visualizeBoidVector()
+{
+	double k = BOID_SIZE;
+	glColor3d(1.0, 1.0, 1.0);
+	glPushMatrix();
+	glTranslated(x, y, 0.0);
+	glBegin(GL_LINES);
+	glVertex2d(0.0, 0.0);
+	glVertex2d(k * q1.x(), k * q1.y());
+	glEnd();
+	glColor3d(0.8, 0.8, 0.8);
+	glBegin(GL_LINES);
+	glVertex2d(0.0, 0.0);
+	glVertex2d(k * q2.x(), k * q2.y());
+	glEnd();
+	glColor3d(0.6, 0.6, 0.6);
+	glBegin(GL_LINES);
+	glVertex2d(0.0, 0.0);
+	glVertex2d(k * q3.x(), k * q3.y());
+	glEnd();
+	glColor3d(0.4, 0.4, 0.4);
+	glBegin(GL_LINES);
+	glVertex2d(0.0, 0.0);
+	glVertex2d(k * q4.x(), k * q4.y());
+	glEnd();
+	glColor3d(0.2, 0.2, 0.2);
+	glBegin(GL_LINES);
+	glVertex2d(0.0, 0.0);
+	glVertex2d(k * q5.x(), k * q5.y());
 	glEnd();
 	glPopMatrix();
 }

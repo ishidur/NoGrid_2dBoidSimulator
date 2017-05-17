@@ -14,6 +14,11 @@ public:
 	double y; //y-position
 	double angle; //radian angle: 0 is top
 	Eigen::Vector2d vctr; //
+	Eigen::Vector2d q1; //
+	Eigen::Vector2d q2; //
+	Eigen::Vector2d q3; //
+	Eigen::Vector2d q4; //
+	Eigen::Vector2d q5; //
 	double speed; // speed
 	int grid_y = -1; //grid address y
 	int grid_x = -1; //grid address x
@@ -37,6 +42,8 @@ public:
 	void setColor(double red, double green, double blue);
 
 	void drawBaseBoid();
+
+	void visualizeBoidVector();
 
 	void updatePosition();
 
