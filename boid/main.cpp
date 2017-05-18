@@ -479,15 +479,6 @@ void key(unsigned char key, int x, int y)
 		}
 		/*initialize boids*/
 		removeAllBoids();
-		for (int i = 0; i < BOIDS_NO; i++)
-		{
-			boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, i));
-			findGrid(i, boids[i].x, boids[i].y);
-			if (i == 0)
-			{
-				boids[i].setColor(1.0, 0.0, 0.0);
-			}
-		}
 	}
 	if (key == 'b')
 	{
