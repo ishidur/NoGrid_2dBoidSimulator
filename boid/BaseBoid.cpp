@@ -5,7 +5,6 @@
 #include "Direction.h"
 #include "parameters.h" //import common parameters
 
-//‹«ŠEðŒ: •Ç
 double checkBoundary(double pos)
 {
 	if (pos > BOUNDARY - WALL_SIZE)
@@ -24,13 +23,14 @@ double radianToDegree(double rad)
 	return rad * 180.0 / M_PI;
 }
 
-BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
+BaseBoid::BaseBoid(double _x, double _y, double _angle, double _size, double _speed, int _id)
 {
 	id = _id;
 	x = _x;
 	y = _y;
 	angle = _angle;
 	speed = _speed;
+	size = _size;
 	vctr = Eigen::Vector2d(-sin(_angle) * _speed, cos(_angle) * _speed);
 }
 
@@ -48,42 +48,9 @@ void BaseBoid::drawBaseBoid()
 	glTranslated(x, y, 0.0);
 	glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
 	glBegin(GL_POLYGON);
-	glVertex2d(0.0, BOID_SIZE);
-	glVertex2d(-0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
-	glVertex2d(0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
-	glEnd();
-	glPopMatrix();
-}
-
-void BaseBoid::visualizeBoidVector()
-{
-	double k = BOID_SIZE;
-	glColor3d(1.0, 1.0, 1.0);
-	glPushMatrix();
-	glTranslated(x, y, 0.0);
-	glBegin(GL_LINES);
-	glVertex2d(0.0, 0.0);
-	glVertex2d(k * q1.x(), k * q1.y());
-	glEnd();
-	glColor3d(0.8, 0.8, 0.8);
-	glBegin(GL_LINES);
-	glVertex2d(0.0, 0.0);
-	glVertex2d(k * q2.x(), k * q2.y());
-	glEnd();
-	glColor3d(0.6, 0.6, 0.6);
-	glBegin(GL_LINES);
-	glVertex2d(0.0, 0.0);
-	glVertex2d(k * q3.x(), k * q3.y());
-	glEnd();
-	glColor3d(0.4, 0.4, 0.4);
-	glBegin(GL_LINES);
-	glVertex2d(0.0, 0.0);
-	glVertex2d(k * q4.x(), k * q4.y());
-	glEnd();
-	glColor3d(0.2, 0.2, 0.2);
-	glBegin(GL_LINES);
-	glVertex2d(0.0, 0.0);
-	glVertex2d(k * q5.x(), k * q5.y());
+	glVertex2d(0.0, size);
+	glVertex2d(-0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
+	glVertex2d(0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
 	glEnd();
 	glPopMatrix();
 }

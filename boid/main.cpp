@@ -1,5 +1,5 @@
 // main.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
-//
+// Created by Ryota Ishidu, Morishita Lab.
 
 #include "stdafx.h"
 #include <GL/glut.h>
@@ -54,7 +54,7 @@ double degreeToRadian(double deg)
 	return deg * M_PI / 180.0;
 }
 
-//this needs for Biod::isVisible
+//this needs for Boid::isVisible
 double _viewAngle = degreeToRadian(THETA_1) / 2.0;
 
 BaseBoid updateSpeedAndAngle(BaseBoid& boid)
@@ -75,34 +75,37 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 		if (boid.isVisible(boids[i].x, boids[i].y, _viewAngle))
 		{
 			/*boidが見える範囲内にいる*/
-			if (dist - 2.0 * BOID_SIZE < R_1)
+			if (dist - (boid.size + boids[i].size) < R_1)
 			{
-				/*rule1: together*/
+				/*rule1: Alignment*/
 				n1++;
 				q1 += boids[i].vctr.normalized();
 				if (boid.id == 0)
 				{
-					boids[i].setColor(0.6, 0.6, 1.0);
+					/*in boid(id:0)'s rule 1 area*/
+					boids[i].setColor(0.6, 1.0, 0.0);
 				}
 			}
-			if (dist - 2.0 * BOID_SIZE < R_2)
+			if (dist - (boid.size + boids[i].size) < R_2)
 			{
-				/*rule2: close*/
+				/*rule2: Cohesion*/
 				n2++;
 				q2 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_2;
 				if (boid.id == 0)
 				{
-					boids[i].setColor(0.4, 0.4, 1.0);
+					/*in boid(id:0)'s rule 2 area*/
+					boids[i].setColor(0.6, 1.0, 0.0);
 				}
 			}
-			if (dist - 2.0 * BOID_SIZE < R_3)
+			if (dist - (boid.size + boids[i].size) < R_3)
 			{
-				/*rule3: away*/
+				/*rule3: Separation-boid*/
 				n3++;
 				q3 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_3;
 				if (boid.id == 0)
 				{
-					boids[i].setColor(0.2, 0.2, 1.0);
+					/*in boid(id:0)'s rule 3 area*/
+					boids[i].setColor(1.0, 1.0, 0.0);
 				}
 			}
 		}
@@ -113,9 +116,9 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	for (auto n : grids[boid.grid_y][boid.grid_x].blockIndexes)
 	{
 		double dist = calcDist(boid.x, boid.y, blocks[n].x, blocks[n].y);
-		if (dist - BLOCK_SIZE - BOID_SIZE <= R_4 && !blocks[n].disabled)
+		if (dist - BLOCK_SIZE - boid.size <= R_4 && !blocks[n].disabled)
 		{
-			/*rule4: block*/
+			/*rule4: Separation-block*/
 			n4++;
 			q4 += Eigen::Vector2d(blocks[n].x - boid.x, blocks[n].y - boid.y) / dist / dist * R_4;
 		}
@@ -126,24 +129,24 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 		double dist = calcDist(boid.x, boid.y, mouseX, mouseY);
 		if (mouseState == 1)
 		{
-			if (dist - MOUSE_SIZE - BOID_SIZE <= R_4)
+			if (dist - MOUSE_SIZE - boid.size <= R_4)
 			{
-				/*rule4: block*/
+				/*rule4*/
 				n4++;
 				q4 += MOUSE_DISTRACTION_FORCE * Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_4;
 			}
 		}
 		if (mouseState == 2)
 		{
-			if (dist - MOUSE_SIZE - BOID_SIZE < R_2)
+			if (dist - MOUSE_SIZE - boid.size < R_2)
 			{
-				/*rule2: close*/
+				/*rule2*/
 				n2++;
 				q2 += MOUSE_ATTRACTION_FORCE * Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_2;
 			}
-			if (dist - MOUSE_SIZE - BOID_SIZE < R_3)
+			if (dist - MOUSE_SIZE - boid.size < R_3)
 			{
-				/*rule3: away*/
+				/*rule3*/
 				n3++;
 				q3 += Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_3;
 			}
@@ -168,7 +171,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 
 	/*wall repel*/
 	double wall = BOUNDARY - WALL_SIZE;
-	double bound = wall - BOID_SIZE - R_4;
+	double bound = wall - boid.size - R_4;
 	if (boid.x >= bound)
 	{
 		wallRepel.x() = 1.0 / (wall - boid.x);
@@ -186,11 +189,6 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 		wallRepel.y() = -1.0 / (wall + boid.y);
 	};
 	Eigen::Vector2d V = ALPHA_1 * q1.normalized() + ALPHA_2 * q2 - ALPHA_3 * q3 - ALPHA_4 * q4 + ALPHA_5 * boid.vctr.normalized() - REPEL_WALL_WEIGHT * wallRepel;
-	boid.q1 = ALPHA_1 * q1.normalized();
-	boid.q2 = ALPHA_2 * q2;
-	boid.q3 = -ALPHA_3 * q3;
-	boid.q4 = -ALPHA_4 * q4;
-	boid.q5 = ALPHA_5 * boid.vctr.normalized();
 	boid.angle = Direction(V).angle;
 	boid.speed = BETA * log(V.norm() + 1.0);
 	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
@@ -246,7 +244,7 @@ void createGrids()
 	}
 }
 
-//this function needs grids, boids: 非効率かも
+//this function needs grids, boids
 void updateGrids()
 {
 	for (int i = 1; i < GRID_NO + 1; i++)
@@ -272,10 +270,10 @@ void coloringGrids()
 		for (int j = 1; j < GRID_NO + 1; ++j)
 		{
 			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 1.0 - double(i) / (GRID_NO + 1));
-			//			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
-			//			{
-			//				glColor3d(0.3, 0.3, 0.3);
-			//			}
+			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
+			{
+				glColor3d(0.3, 0.3, 0.3);
+			}
 			glBegin(GL_POLYGON);
 			glVertex2d(grids[i][j].left, grids[i][j].top);
 			glVertex2d(grids[i][j].left, grids[i][j].bottom);
@@ -374,10 +372,6 @@ void display(void)
 	for (auto boid : boids)
 	{
 		boid.drawBaseBoid();
-		if (boid.id == 0)
-		{
-			boid.visualizeBoidVector();
-		}
 	}
 	for (auto block : blocks)
 	{
@@ -507,7 +501,6 @@ void key(unsigned char key, int x, int y)
 	if (key == 'a')
 	{
 		/*add boid*/
-		/*add boid*/
 		double bound = BOUNDARY - BOID_SIZE - WALL_SIZE;
 		if (pos_x > bound || pos_x < -bound || pos_y > bound || pos_y < -bound)
 		{
@@ -516,7 +509,7 @@ void key(unsigned char key, int x, int y)
 		else
 		{
 			int index = boids.size();
-			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, index));
+			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, index));
 			if (index == 0)
 			{
 				boids[index].setColor(1.0, 0.0, 0.0);
@@ -572,7 +565,7 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SPEED, i));
+		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
 		findGrid(i, boids[i].x, boids[i].y);
 		if (i == 0)
 		{
