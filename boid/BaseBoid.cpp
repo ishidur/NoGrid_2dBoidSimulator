@@ -5,7 +5,6 @@
 #include "Direction.h"
 #include "parameters.h" //import common parameters
 
-//‹«ŠEðŒ: •Ç
 double checkBoundary(double pos)
 {
 	if (pos > BOUNDARY - WALL_SIZE)
@@ -24,13 +23,14 @@ double radianToDegree(double rad)
 	return rad * 180.0 / M_PI;
 }
 
-BaseBoid::BaseBoid(double _x, double _y, double _angle, double _speed, int _id)
+BaseBoid::BaseBoid(double _x, double _y, double _angle, double _size, double _speed, int _id)
 {
 	id = _id;
 	x = _x;
 	y = _y;
 	angle = _angle;
 	speed = _speed;
+	size = _size;
 	vctr = Eigen::Vector2d(-sin(_angle) * _speed, cos(_angle) * _speed);
 }
 
@@ -41,16 +41,16 @@ void BaseBoid::setColor(double red, double green, double blue)
 	b = blue;
 }
 
-void BaseBoid::drawBaseBoid() //TODO:’¹‚ç‚µ‚­
+void BaseBoid::drawBaseBoid()
 {
 	glColor3d(r, g, b);
 	glPushMatrix();
 	glTranslated(x, y, 0.0);
 	glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
 	glBegin(GL_POLYGON);
-	glVertex2d(0.0, BOID_SIZE);
-	glVertex2d(-0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
-	glVertex2d(0.4 * BOID_SIZE * sqrt(3.0) / 2.0, -BOID_SIZE / 2.0);
+	glVertex2d(0.0, size);
+	glVertex2d(-0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
+	glVertex2d(0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
 	glEnd();
 	glPopMatrix();
 }
