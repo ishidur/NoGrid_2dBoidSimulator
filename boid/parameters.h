@@ -1,5 +1,12 @@
 #pragma once
 /*prameters*/
+/*
+ *rule1: Alignment 
+ *rule2: Cohesion
+ *rule3: Separation-boid
+ *rule4: Separation-block
+ *rule5: Inertial
+ */
 #define GRID_NO 15 //number of grid; boid can find around 1 grid
 #define WALL_SIZE 5.0 //size of wall
 #define BOID_SIZE 10.0 //size of boid

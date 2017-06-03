@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Eigen/Core"
+#include "parameters.h"
 
 
 class BaseBoid
@@ -13,6 +14,7 @@ public:
 	double x; //_x-position
 	double y; //y-position
 	double angle; //radian angle: 0 is top
+	double size = BOID_SIZE; //boid size
 	Eigen::Vector2d vctr; //
 	double speed; // speed
 	int grid_y = -1; //grid address y
@@ -26,7 +28,7 @@ public:
 	* \param speed: boid move speed
 	* \param id: identifier
 	*/
-	BaseBoid(double x = 0.0, double y = 0.0, double angle = 0.0, double speed = 0.0, int id = -1);
+	BaseBoid(double x = 0.0, double y = 0.0, double angle = 0.0, double size = 0.0, double speed = 0.0, int id = -1);
 
 	/**
 	* \brief
@@ -35,6 +37,8 @@ public:
 	* \param blue
 	*/
 	void setColor(double red, double green, double blue);
+
+	void setSize(double size);
 
 	void drawBaseBoid();
 
