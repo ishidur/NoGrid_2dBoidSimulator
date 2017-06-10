@@ -111,7 +111,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				if (boid.id == 0)
 				{
 					/*in boid(id:0)'s rule 1 area*/
-					boids[i].setColor(0.6, 1.0, 0.0);
+					//					boids[i].setColor(0.6, 1.0, 0.0);
 				}
 			}
 			if (dist - (boid.size + boids[i].size) < R_2)
@@ -122,7 +122,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				if (boid.id == 0)
 				{
 					/*in boid(id:0)'s rule 2 area*/
-					boids[i].setColor(0.6, 1.0, 0.0);
+					//					boids[i].setColor(0.6, 1.0, 0.0);
 				}
 			}
 			if (dist - (boid.size + boids[i].size) < R_3)
@@ -133,7 +133,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				if (boid.id == 0)
 				{
 					/*in boid(id:0)'s rule 3 area*/
-					boids[i].setColor(1.0, 1.0, 0.0);
+					//					boids[i].setColor(1.0, 1.0, 0.0);
 				}
 			}
 		}
@@ -406,7 +406,7 @@ int findDuplicateBlock(double x, double y)
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	coloringGrids();
+//	coloringGrids();
 	drawWall();
 	for (auto boid : boids)
 	{
@@ -552,7 +552,7 @@ void key(unsigned char key, int x, int y)
 			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, index));
 			if (index == 0)
 			{
-				boids[index].setColor(1.0, 0.0, 0.0);
+				//				boids[index].setColor(1.0, 0.0, 0.0);
 			}
 			findGrid(index, boids[index].x, boids[index].y);
 		}
@@ -563,9 +563,9 @@ void timer(int value)
 {
 	if (time % 10 == 0)
 	{
-//		std::cout << "time: " << time / 10 << std::endl;
-//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::pair<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
-//		std::cout << "" << std::endl;
+		//		std::cout << "time: " << time / 10 << std::endl;
+		//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::pair<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
+		//		std::cout << "" << std::endl;
 	}
 	removeAllConnections();
 	for (int i = 0; i < boids.size(); i++)
@@ -573,7 +573,7 @@ void timer(int value)
 		boids[i].updatePosition();
 		if (i != 0)
 		{
-			boids[i].setColor(1.0, 1.0, 1.0);
+			//			boids[i].setColor(1.0, 1.0, 1.0);
 		}
 		findGrid(i, boids[i].x, boids[i].y);
 	}
@@ -612,7 +612,7 @@ int main(int argc, char* argv[])
 		findGrid(i, boids[i].x, boids[i].y);
 		if (i == 0)
 		{
-			boids[i].setColor(1.0, 0.0, 0.0);
+			//			boids[i].setColor(1.0, 0.0, 0.0);
 		}
 	}
 	for (int i = 0; i < BLOCK_NO; ++i)
