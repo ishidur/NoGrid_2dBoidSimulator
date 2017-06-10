@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Eigen/Core"
 #include "parameters.h"
+#include <vector>
 
 
 class BaseBoid

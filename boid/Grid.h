@@ -24,7 +24,7 @@ public:
 	* \brief
 	* \param index: boid-id
 	*/
-	void addBoidByIndex(int index);
+	void addBoidByIndex(int newIndex);
 	/**
 	* \brief
 	* \param index: boid-id
@@ -44,7 +44,7 @@ public:
 	* \brief
 	* \param index: block-id
 	*/
-	void addBlockByIndex(int index);
+	void addBlockByIndex(int newIndex);
 	/**
 	* \brief
 	* \param index: block-id

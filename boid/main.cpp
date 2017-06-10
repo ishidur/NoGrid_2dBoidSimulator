@@ -29,6 +29,20 @@ double calcDist(double x1, double y1, double x2, double y2)
 Grid grids[GRID_NO + 2][GRID_NO + 2];
 
 std::vector<Block> blocks;
+std::vector<std::pair<int, int>> boidConnections;
+
+void addConnections(std::pair<int, int> newConnection)
+{
+	boidConnections.push_back(newConnection);
+	std::sort(boidConnections.begin(), boidConnections.end());
+	auto result = std::unique(boidConnections.begin(), boidConnections.end());
+	boidConnections.erase(result, boidConnections.end());
+}
+
+void removeAllConnections()
+{
+	boidConnections.clear();
+}
 
 //this function needs grids
 std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
@@ -77,6 +91,20 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 			/*boid‚ªŒ©‚¦‚é”ÍˆÍ“à‚É‚¢‚é*/
 			if (dist - (boid.size + boids[i].size) < R_1)
 			{
+				int first;
+				int second;
+				if (boid.id < boids[i].id)
+				{
+					first = boid.id;
+					second = boids[i].id;
+				}
+				else
+				{
+					first = boids[i].id;
+					second = boid.id;
+				}
+				std::pair<int, int> connection = std::make_pair(first, second);
+				addConnections(connection);
 				/*rule1: Alignment*/
 				n1++;
 				q1 += boids[i].vctr.normalized();
@@ -195,6 +223,17 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	return boid;
 }
 
+void drawConnections()
+{
+	glColor3d(1.0, 1.0, 1.0);
+	for (auto pair: boidConnections)
+	{
+		glBegin(GL_LINES);
+		glVertex2d(boids[pair.first].x, boids[pair.first].y);
+		glVertex2d(boids[pair.second].x, boids[pair.second].y);
+		glEnd();
+	}
+}
 
 void drawWall()
 {
@@ -413,6 +452,7 @@ void display(void)
 		glEnd();
 		glPopMatrix();
 	}
+	drawConnections();
 	glFlush();
 }
 
@@ -521,10 +561,13 @@ void key(unsigned char key, int x, int y)
 
 void timer(int value)
 {
-	//	if (time % 10 == 0)
-	//	{
-	//		cout << time / 10 << endl;
-	//	}
+	if (time % 10 == 0)
+	{
+//		std::cout << "time: " << time / 10 << std::endl;
+//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::pair<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
+//		std::cout << "" << std::endl;
+	}
+	removeAllConnections();
 	for (int i = 0; i < boids.size(); i++)
 	{
 		boids[i].updatePosition();
