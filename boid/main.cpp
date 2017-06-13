@@ -225,7 +225,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 
 void drawConnections()
 {
-	glColor3d(1.0, 1.0, 1.0);
+	glColor3d(0.6, 0.6, 0.6);
 	for (auto pair: boidConnections)
 	{
 		glBegin(GL_LINES);
@@ -406,8 +406,9 @@ int findDuplicateBlock(double x, double y)
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-//	coloringGrids();
+	//	coloringGrids();
 	drawWall();
+	drawConnections();
 	for (auto boid : boids)
 	{
 		boid.drawBaseBoid();
@@ -452,7 +453,6 @@ void display(void)
 		glEnd();
 		glPopMatrix();
 	}
-	drawConnections();
 	glFlush();
 }
 
