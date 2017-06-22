@@ -3,7 +3,6 @@
 #include <GL/glut.h>
 #include <corecrt_math_defines.h>
 #include "Direction.h"
-#include "parameters.h" //import common parameters
 
 double checkBoundary(double pos)
 {

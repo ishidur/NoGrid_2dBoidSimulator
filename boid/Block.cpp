@@ -3,7 +3,6 @@
 #include <GL/glut.h>
 #include <corecrt_math_defines.h>
 #include <cmath>
-#include "parameters.h"
 
 Block::Block(double _x, double _y, double _r)
 {

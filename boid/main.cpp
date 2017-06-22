@@ -13,7 +13,6 @@
 #include "BaseBoid.h"
 #include "Direction.h"
 #include "Block.h"
-#include "parameters.h" //import common parameters
 #include "Eigen/Core"
 
 int time = 0; //time
