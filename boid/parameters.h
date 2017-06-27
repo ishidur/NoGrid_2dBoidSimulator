@@ -35,4 +35,4 @@
 #define THETA_2 240.0 //rule2 view angle
 #define THETA_3 240.0 //rule3 view angle
 #define THETA_4 240.0 //rule4 view angle
-#define BETA 40.0 //boid speed factor
+#define BETA 60.0 //boid speed factor
