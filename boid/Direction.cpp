@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Direction.h"
+
 Direction::Direction(double _angle)
 {
 	angle = _angle;
@@ -7,6 +8,7 @@ Direction::Direction(double _angle)
 	y = cos(_angle);
 	vector = Eigen::Vector2d(x, y);
 }
+
 Direction::Direction(double _x, double _y)
 {
 	double dist = sqrt(_x * _x + _y * _y);
@@ -22,6 +24,7 @@ Direction::Direction(double _x, double _y)
 		angle = -acos(_y / dist);
 	}
 }
+
 Direction::Direction(Eigen::Vector2d& p)
 {
 	double dist = p.norm();

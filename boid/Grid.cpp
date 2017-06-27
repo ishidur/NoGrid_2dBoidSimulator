@@ -2,6 +2,7 @@
 #include "Grid.h"
 #include <vector>
 #include <algorithm>
+
 Grid::Grid(double _top, double _bottom, double _left, double _right)
 {
 	left = _left;
@@ -9,11 +10,13 @@ Grid::Grid(double _top, double _bottom, double _left, double _right)
 	top = _top;
 	bottom = _bottom;
 }
+
 void Grid::addBoidByIndex(int index)
 {
 	boidIndexes.push_back(index);
 	sort(boidIndexes.begin(), boidIndexes.end());
 }
+
 void Grid::deleteBoidByIndex(int index)
 {
 	if (find(boidIndexes.begin(), boidIndexes.end(), index) != boidIndexes.end())
@@ -22,6 +25,7 @@ void Grid::deleteBoidByIndex(int index)
 		boidIndexes.pop_back();
 	}
 }
+
 bool Grid::findBoidByIndex(int index)
 {
 	if (find(boidIndexes.begin(), boidIndexes.end(), index) != boidIndexes.end())
@@ -30,15 +34,18 @@ bool Grid::findBoidByIndex(int index)
 	}
 	return false;
 }
+
 void Grid::deleteAllBoids()
 {
 	boidIndexes.clear();
 }
+
 void Grid::addBlockByIndex(int index)
 {
 	blockIndexes.push_back(index);
 	sort(blockIndexes.begin(), blockIndexes.end());
 }
+
 void Grid::deleteBlockByIndex(int index)
 {
 	if (find(blockIndexes.begin(), blockIndexes.end(), index) != blockIndexes.end())
@@ -47,6 +54,7 @@ void Grid::deleteBlockByIndex(int index)
 		blockIndexes.pop_back();
 	}
 }
+
 void Grid::deleteAllBlocks()
 {
 	blockIndexes.clear();
