@@ -17,7 +17,7 @@
 #define BLOCK_NO 10 //initial number of blocks
 #define CIRCLE_SLICE 10 //circle slices
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
-#define WINDOW_SIZE 700 //window size
+#define WINDOW_SIZE 500 //window size
 #define BOUNDARY 500.0 //area boundary
 #define REPEL_WALL_WEIGHT 30.0 //repel force weight
 #define MOUSE_ATTRACTION_FORCE 5.0 //mouse attraction weight

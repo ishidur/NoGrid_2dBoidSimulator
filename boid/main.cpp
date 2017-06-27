@@ -404,7 +404,7 @@ int findDuplicateBlock(double x, double y)
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	coloringGrids();
+	//	coloringGrids();
 	drawWall();
 	drawConnections();
 	for (auto boid : boids)
