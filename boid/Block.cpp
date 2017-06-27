@@ -1,6 +1,5 @@
 ﻿#include "stdafx.h"
 #include "Block.h"
-#include <GL/glut.h>
 #include <corecrt_math_defines.h>
 #include <cmath>
 
@@ -17,6 +16,7 @@ void Block::setColor(double _red, double _green, double _blue)
 	green = _green;
 	blue = _blue;
 }
+
 void Block::drawBlock()
 {
 	double angl = 2.0 * M_PI / CIRCLE_SLICE;
@@ -31,8 +31,8 @@ void Block::drawBlock()
 	glEnd();
 	glPopMatrix();
 }
+
 void Block::setDisabled()
 {
 	disabled = true;
 }
-

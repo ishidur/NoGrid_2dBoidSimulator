@@ -2,7 +2,6 @@
 // Created by Ryota Ishidu, Morishita Lab.
 
 #include "stdafx.h"
-#include <GL/glut.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <vector>
@@ -33,8 +32,8 @@ std::vector<std::pair<int, int>> boidConnections;
 void addConnections(std::pair<int, int> newConnection)
 {
 	boidConnections.push_back(newConnection);
-	std::sort(boidConnections.begin(), boidConnections.end());
-	auto result = std::unique(boidConnections.begin(), boidConnections.end());
+	sort(boidConnections.begin(), boidConnections.end());
+	auto result = unique(boidConnections.begin(), boidConnections.end());
 	boidConnections.erase(result, boidConnections.end());
 }
 
@@ -214,7 +213,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	else if (boid.y <= -bound)
 	{
 		wallRepel.y() = -1.0 / (wall + boid.y);
-	};
+	}
 	Eigen::Vector2d V = ALPHA_1 * q1.normalized() + ALPHA_2 * q2 - ALPHA_3 * q3 - ALPHA_4 * q4 + ALPHA_5 * boid.vctr.normalized() - REPEL_WALL_WEIGHT * wallRepel;
 	boid.angle = Direction(V).angle;
 	boid.speed = BETA * log(V.norm() + 1.0);
@@ -405,7 +404,7 @@ int findDuplicateBlock(double x, double y)
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	//	coloringGrids();
+	coloringGrids();
 	drawWall();
 	drawConnections();
 	for (auto boid : boids)
@@ -623,10 +622,10 @@ int main(int argc, char* argv[])
 	{
 		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
 		findGrid(i, boids[i].x, boids[i].y);
-		if (i == 0)
-		{
-			//			boids[i].setColor(1.0, 0.0, 0.0);
-		}
+		//		if (i == 0)
+		//		{
+		//			boids[i].setColor(1.0, 0.0, 0.0);
+		//		}
 	}
 	for (int i = 0; i < BLOCK_NO; ++i)
 	{
