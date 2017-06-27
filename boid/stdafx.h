@@ -9,10 +9,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
-#include <windows.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
-
-#include "parameters.h" //import common parameters
-
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください
+
+#include <GL/glut.h>
+#include "parameters.h" //import common parameters
