@@ -27,9 +27,9 @@ double calcDist(double x1, double y1, double x2, double y2)
 Grid grids[GRID_NO + 2][GRID_NO + 2];
 
 std::vector<Block> blocks;
-std::vector<std::pair<int, int>> boidConnections;
+std::vector<std::tuple<int, int>> boidConnections;
 
-void addConnections(std::pair<int, int> newConnection)
+void addConnections(std::tuple<int, int> newConnection)
 {
 	boidConnections.push_back(newConnection);
 	sort(boidConnections.begin(), boidConnections.end());
@@ -101,7 +101,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 					first = boids[i].id;
 					second = boid.id;
 				}
-				std::pair<int, int> connection = std::make_pair(first, second);
+				std::tuple<int, int> connection = std::make_pair(first, second);
 				addConnections(connection);
 				/*rule1: Alignment*/
 				n1++;
@@ -224,11 +224,11 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 void drawConnections()
 {
 	glColor3d(0.6, 0.6, 0.6);
-	for (auto pair: boidConnections)
+	for (auto tuple: boidConnections)
 	{
 		glBegin(GL_LINES);
-		glVertex2d(boids[pair.first].x, boids[pair.first].y);
-		glVertex2d(boids[pair.second].x, boids[pair.second].y);
+		glVertex2d(boids[std::get<0>(tuple)].x, boids[std::get<0>(tuple)].y);
+		glVertex2d(boids[std::get<1>(tuple)].x, boids[std::get<1>(tuple)].y);
 		glEnd();
 	}
 }
@@ -576,7 +576,7 @@ void timer(int value)
 	if (time % 10 == 0)
 	{
 		//		std::cout << "time: " << time / 10 << std::endl;
-		//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::pair<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
+		//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::tuple<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
 		//		std::cout << "" << std::endl;
 	}
 	removeAllConnections();
