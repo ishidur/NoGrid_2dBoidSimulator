@@ -8,13 +8,14 @@
 #include <tuple>
 #include <algorithm>
 #include <iostream>
+#include "ppl.h"
 #include "Grid.h"
 #include "BaseBoid.h"
 #include "Direction.h"
 #include "Block.h"
 #include "Eigen/Core"
 
-int time = 0; //time
+int seconds = 0; //seconds
 int mouseState = 0; //0 is not pressed, 1 is distractor, 2 is attractor
 double mouseX = 0.0;
 double mouseY = 0.0;
@@ -573,9 +574,9 @@ void key(unsigned char key, int x, int y)
 
 void timer(int value)
 {
-	if (time % 10 == 0)
+	if (seconds % 10 == 0)
 	{
-		//		std::cout << "time: " << time / 10 << std::endl;
+		//		std::cout << "seconds: " << seconds / 10 << std::endl;
 		//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::tuple<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
 		//		std::cout << "" << std::endl;
 	}
@@ -596,8 +597,8 @@ void timer(int value)
 		boids[i] = updateSpeedAndAngle(boids[i]);
 	}
 	glutPostRedisplay();
-	time++;
-	glutTimerFunc(FLAME_RATE, timer, time);
+	seconds++;
+	glutTimerFunc(FLAME_RATE, timer, seconds);
 }
 
 void init(void)
@@ -635,7 +636,7 @@ int main(int argc, char* argv[])
 	updateGrids();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
-	glutTimerFunc(FLAME_RATE, timer, time);
+	glutTimerFunc(FLAME_RATE, timer, seconds);
 	glutMainLoop();
 	return 0;
 }

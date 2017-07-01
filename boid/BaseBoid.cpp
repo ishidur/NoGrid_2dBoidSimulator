@@ -7,11 +7,11 @@ double checkBoundary(double pos)
 {
 	if (pos > BOUNDARY - WALL_SIZE)
 	{
-		pos = BOUNDARY - WALL_SIZE;
+		pos = BOUNDARY - WALL_SIZE - 0.1;
 	}
 	else if (pos < -BOUNDARY + WALL_SIZE)
 	{
-		pos = -BOUNDARY + WALL_SIZE;
+		pos = -BOUNDARY + WALL_SIZE + 0.1;
 	}
 	return pos;
 }
