@@ -49,7 +49,7 @@ std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 	std::vector<int> indexes;
 	for (int i = -NEAR_GRID_NO; i <= NEAR_GRID_NO; ++i)
 	{
-		for (int j = -NEAR_GRID_NO; j <= NEAR_GRID_NO; ++j)
+		for (int j = -NEAR_GRID_NO + abs(i); j <= NEAR_GRID_NO - abs(i); ++j)
 		{
 			indexes.insert(indexes.end(), grids[grid_y + j][grid_x + i].boidIndexes.begin(), grids[grid_y + j][grid_x + i].boidIndexes.end());
 		}
@@ -84,6 +84,11 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	/*loop starts here*/
 	for (auto i : indexes)
 	{
+
+		if (boid.id == 0)
+		{
+			boids[i].setColor(0.0, 0.0, 1.0);
+		}
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
 		if (boid.isVisible(boids[i].x, boids[i].y, _viewAngle))
 		{
@@ -340,7 +345,7 @@ void whereBlock(int index, double x, double y)
 	int gridy = int(ceil((BOUNDARY + y) / width)) - 1 + NEAR_GRID_NO;
 	for (int i = -NEAR_GRID_NO; i <= NEAR_GRID_NO; ++i)
 	{
-		for (int j = -NEAR_GRID_NO; j <= NEAR_GRID_NO; ++j)
+		for (int j = -NEAR_GRID_NO + abs(i); j <= NEAR_GRID_NO - abs(i); ++j)
 		{
 			grids[gridy + i][gridx + j].addBlockByIndex(index);
 		}
@@ -354,7 +359,7 @@ void removeBlock(int index, double x, double y)
 	int gridy = int(ceil((BOUNDARY - y) / width)) - 1 + NEAR_GRID_NO;
 	for (int i = -NEAR_GRID_NO; i <= NEAR_GRID_NO; ++i)
 	{
-		for (int j = -NEAR_GRID_NO; j <= NEAR_GRID_NO; ++j)
+		for (int j = -NEAR_GRID_NO + abs(i); j <= NEAR_GRID_NO - abs(i); ++j)
 		{
 			grids[gridy + i][gridx + j].deleteBlockByIndex(index);
 		}
