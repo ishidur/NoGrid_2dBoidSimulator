@@ -25,7 +25,7 @@ double calcDist(double x1, double y1, double x2, double y2)
 	return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
-Grid grids[GRID_NO + 2][GRID_NO + 2];
+Grid grids[GRID_NO + NEAR_GRID_NO * 2][GRID_NO + NEAR_GRID_NO * 2];
 
 std::vector<Block> blocks;
 std::vector<std::tuple<int, int>> boidConnections;
@@ -47,9 +47,9 @@ void removeAllConnections()
 std::vector<int> getAroundGridBoids(int id, int grid_x, int grid_y)
 {
 	std::vector<int> indexes;
-	for (int i = -1; i <= 1; ++i)
+	for (int i = -NEAR_GRID_NO; i <= NEAR_GRID_NO; ++i)
 	{
-		for (int j = -1; j <= 1; ++j)
+		for (int j = -NEAR_GRID_NO + abs(i); j <= NEAR_GRID_NO - abs(i); ++j)
 		{
 			indexes.insert(indexes.end(), grids[grid_y + j][grid_x + i].boidIndexes.begin(), grids[grid_y + j][grid_x + i].boidIndexes.end());
 		}
@@ -84,6 +84,11 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	/*loop starts here*/
 	for (auto i : indexes)
 	{
+
+		if (boid.id == 0)
+		{
+			boids[i].setColor(0.0, 0.0, 1.0);
+		}
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
 		if (boid.isVisible(boids[i].x, boids[i].y, _viewAngle))
 		{
@@ -110,7 +115,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				if (boid.id == 0)
 				{
 					/*in boid(id:0)'s rule 1 area*/
-					//					boids[i].setColor(0.6, 1.0, 0.0);
+					boids[i].setColor(0.6, 1.0, 0.0);
 				}
 			}
 			if (dist - (boid.size + boids[i].size) < R_2)
@@ -121,7 +126,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				if (boid.id == 0)
 				{
 					/*in boid(id:0)'s rule 2 area*/
-					//					boids[i].setColor(0.6, 1.0, 0.0);
+					boids[i].setColor(0.6, 1.0, 0.0);
 				}
 			}
 			if (dist - (boid.size + boids[i].size) < R_3)
@@ -132,7 +137,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				if (boid.id == 0)
 				{
 					/*in boid(id:0)'s rule 3 area*/
-					//					boids[i].setColor(1.0, 1.0, 0.0);
+					boids[i].setColor(1.0, 1.0, 0.0);
 				}
 			}
 		}
@@ -269,11 +274,11 @@ void createGrids()
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
 	double left;
-	double top = -BOUNDARY - width;
-	for (int i = 0; i < GRID_NO + 2; ++i)
+	double top = -BOUNDARY - double(NEAR_GRID_NO) * width;
+	for (int i = 0; i < GRID_NO + NEAR_GRID_NO * 2; ++i)
 	{
-		left = -BOUNDARY - width;
-		for (int j = 0; j < GRID_NO + 2; ++j)
+		left = -BOUNDARY - double(NEAR_GRID_NO) * width;
+		for (int j = 0; j < GRID_NO + NEAR_GRID_NO * 2; ++j)
 		{
 			grids[i][j] = Grid(top, top + width, left, left + width);
 			left += width;
@@ -285,9 +290,9 @@ void createGrids()
 //this function needs grids, boids
 void updateGrids()
 {
-	for (int i = 1; i < GRID_NO + 1; i++)
+	for (int i = NEAR_GRID_NO; i < GRID_NO + NEAR_GRID_NO; i++)
 	{
-		for (int j = 1; j < GRID_NO + 1; j++)
+		for (int j = NEAR_GRID_NO; j < GRID_NO + NEAR_GRID_NO; j++)
 		{
 			std::vector<int> indexes = grids[i][j].boidIndexes;
 			for (auto n : indexes)
@@ -303,11 +308,11 @@ void updateGrids()
 
 void coloringGrids()
 {
-	for (int i = 1; i < GRID_NO + 1; ++i)
+	for (int i = NEAR_GRID_NO; i < GRID_NO + NEAR_GRID_NO; ++i)
 	{
-		for (int j = 1; j < GRID_NO + 1; ++j)
+		for (int j = NEAR_GRID_NO; j < GRID_NO + NEAR_GRID_NO; ++j)
 		{
-			glColor3d(double(i) / (GRID_NO + 1), double(j) / (GRID_NO + 1), 1.0 - double(i) / (GRID_NO + 1));
+			glColor3d(double(i) / (GRID_NO + NEAR_GRID_NO), double(j) / (GRID_NO + NEAR_GRID_NO), 1.0 - double(i) / (GRID_NO + NEAR_GRID_NO));
 			if (find(grids[i][j].boidIndexes.begin(), grids[i][j].boidIndexes.end(), 0) != grids[i][j].boidIndexes.end())
 			{
 				glColor3d(0.3, 0.3, 0.3);
@@ -326,8 +331,8 @@ void coloringGrids()
 void findGrid(int index, double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
-	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY + y) / width));
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1 + NEAR_GRID_NO;
+	int gridy = int(ceil((BOUNDARY + y) / width)) - 1 + NEAR_GRID_NO;
 	grids[gridy][gridx].addBoidByIndex(index);
 	boids[index].grid_x = gridx;
 	boids[index].grid_y = gridy;
@@ -336,11 +341,11 @@ void findGrid(int index, double x, double y)
 void whereBlock(int index, double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
-	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY + y) / width));
-	for (int i = -1; i <= 1; ++i)
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1 + NEAR_GRID_NO;
+	int gridy = int(ceil((BOUNDARY + y) / width)) - 1 + NEAR_GRID_NO;
+	for (int i = -NEAR_GRID_NO; i <= NEAR_GRID_NO; ++i)
 	{
-		for (int j = -1; j <= 1; ++j)
+		for (int j = -NEAR_GRID_NO + abs(i); j <= NEAR_GRID_NO - abs(i); ++j)
 		{
 			grids[gridy + i][gridx + j].addBlockByIndex(index);
 		}
@@ -350,11 +355,11 @@ void whereBlock(int index, double x, double y)
 void removeBlock(int index, double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
-	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY - y) / width));
-	for (int i = -1; i <= 1; ++i)
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1 + NEAR_GRID_NO;
+	int gridy = int(ceil((BOUNDARY - y) / width)) - 1 + NEAR_GRID_NO;
+	for (int i = -NEAR_GRID_NO; i <= NEAR_GRID_NO; ++i)
 	{
-		for (int j = -1; j <= 1; ++j)
+		for (int j = -NEAR_GRID_NO + abs(i); j <= NEAR_GRID_NO - abs(i); ++j)
 		{
 			grids[gridy + i][gridx + j].deleteBlockByIndex(index);
 		}
@@ -364,9 +369,9 @@ void removeBlock(int index, double x, double y)
 
 void removeAllBlocks()
 {
-	for (int i = 0; i < GRID_NO + 2; ++i)
+	for (int i = 0; i < GRID_NO + NEAR_GRID_NO * 2; ++i)
 	{
-		for (int j = 0; j < GRID_NO + 2; ++j)
+		for (int j = 0; j < GRID_NO + NEAR_GRID_NO * 2; ++j)
 		{
 			grids[i][j].deleteAllBlocks();
 		}
@@ -376,9 +381,9 @@ void removeAllBlocks()
 
 void removeAllBoids()
 {
-	for (int i = 0; i < GRID_NO + 2; ++i)
+	for (int i = 0; i < GRID_NO + NEAR_GRID_NO * 2; ++i)
 	{
-		for (int j = 0; j < GRID_NO + 2; ++j)
+		for (int j = 0; j < GRID_NO + NEAR_GRID_NO * 2; ++j)
 		{
 			grids[i][j].deleteAllBoids();
 		}
@@ -389,8 +394,8 @@ void removeAllBoids()
 int findDuplicateBlock(double x, double y)
 {
 	double width = 2.0 * BOUNDARY / GRID_NO;
-	int gridx = int(ceil((BOUNDARY + x) / width));
-	int gridy = int(ceil((BOUNDARY + y) / width));
+	int gridx = int(ceil((BOUNDARY + x) / width)) - 1 + NEAR_GRID_NO;
+	int gridy = int(ceil((BOUNDARY + y) / width)) - 1 + NEAR_GRID_NO;
 	for (auto i : grids[gridy][gridx].blockIndexes)
 	{
 		double dist = calcDist(x, y, blocks[i].x, blocks[i].y);
@@ -405,7 +410,7 @@ int findDuplicateBlock(double x, double y)
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	//	coloringGrids();
+	coloringGrids();
 	drawWall();
 	drawConnections();
 	for (auto boid : boids)
@@ -532,7 +537,7 @@ void key(unsigned char key, int x, int y)
 			findGrid(i, boids[i].x, boids[i].y);
 			if (i == 0)
 			{
-				//			boids[i].setColor(1.0, 0.0, 0.0);
+				boids[i].setColor(1.0, 0.0, 0.0);
 			}
 		}
 	}
@@ -565,7 +570,7 @@ void key(unsigned char key, int x, int y)
 			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, index));
 			if (index == 0)
 			{
-				//				boids[index].setColor(1.0, 0.0, 0.0);
+				boids[index].setColor(1.0, 0.0, 0.0);
 			}
 			findGrid(index, boids[index].x, boids[index].y);
 		}
@@ -586,7 +591,7 @@ void timer(int value)
 		boids[i].updatePosition();
 		if (i != 0)
 		{
-			//			boids[i].setColor(1.0, 1.0, 1.0);
+			boids[i].setColor(1.0, 1.0, 1.0);
 		}
 		findGrid(i, boids[i].x, boids[i].y);
 	}
@@ -623,10 +628,10 @@ int main(int argc, char* argv[])
 	{
 		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
 		findGrid(i, boids[i].x, boids[i].y);
-		//		if (i == 0)
-		//		{
-		//			boids[i].setColor(1.0, 0.0, 0.0);
-		//		}
+		if (i == 0)
+		{
+			boids[i].setColor(1.0, 0.0, 0.0);
+		}
 	}
 	for (int i = 0; i < BLOCK_NO; ++i)
 	{

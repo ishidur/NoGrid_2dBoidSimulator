@@ -7,7 +7,8 @@
  *rule4: Separation-block
  *rule5: Inertial
  */
-#define GRID_NO 15 //number of grid; boid can find around 1 grid
+#define GRID_NO 30 //number of grid
+#define NEAR_GRID_NO 3 //number of near grid where boid can see
 #define WALL_SIZE 5.0 //size of wall
 #define BOID_SIZE 10.0 //size of boid
 #define BLOCK_SIZE 10.0 //size of block
