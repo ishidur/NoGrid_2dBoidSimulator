@@ -84,11 +84,10 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	/*loop starts here*/
 	for (auto i : indexes)
 	{
-
-		if (boid.id == 0)
-		{
-			boids[i].setColor(0.0, 0.0, 1.0);
-		}
+		//		if (boid.id == 0)
+		//		{
+		//			boids[i].setColor(0.0, 0.0, 1.0);
+		//		}
 		double dist = calcDist(boid.x, boid.y, boids[i].x, boids[i].y);
 		if (boid.isVisible(boids[i].x, boids[i].y, _viewAngle))
 		{
@@ -112,33 +111,33 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 				/*rule1: Alignment*/
 				n1++;
 				q1 += boids[i].vctr.normalized();
-				if (boid.id == 0)
-				{
-					/*in boid(id:0)'s rule 1 area*/
-					boids[i].setColor(0.6, 1.0, 0.0);
-				}
+				//				if (boid.id == 0)
+				//				{
+				//					/*in boid(id:0)'s rule 1 area*/
+				//					boids[i].setColor(0.6, 1.0, 0.0);
+				//				}
 			}
 			if (dist - (boid.size + boids[i].size) < R_2)
 			{
 				/*rule2: Cohesion*/
 				n2++;
 				q2 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_2;
-				if (boid.id == 0)
-				{
-					/*in boid(id:0)'s rule 2 area*/
-					boids[i].setColor(0.6, 1.0, 0.0);
-				}
+				//				if (boid.id == 0)
+				//				{
+				//					/*in boid(id:0)'s rule 2 area*/
+				//					boids[i].setColor(0.6, 1.0, 0.0);
+				//				}
 			}
 			if (dist - (boid.size + boids[i].size) < R_3)
 			{
 				/*rule3: Separation-boid*/
 				n3++;
 				q3 += Eigen::Vector2d(boids[i].x - boid.x, boids[i].y - boid.y) / dist / dist * R_3;
-				if (boid.id == 0)
-				{
-					/*in boid(id:0)'s rule 3 area*/
-					boids[i].setColor(1.0, 1.0, 0.0);
-				}
+				//				if (boid.id == 0)
+				//				{
+				//					/*in boid(id:0)'s rule 3 area*/
+				//					boids[i].setColor(1.0, 1.0, 0.0);
+				//				}
 			}
 		}
 	}
@@ -410,7 +409,7 @@ int findDuplicateBlock(double x, double y)
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	coloringGrids();
+	//	coloringGrids();
 	drawWall();
 	drawConnections();
 	for (auto boid : boids)
@@ -579,20 +578,20 @@ void key(unsigned char key, int x, int y)
 
 void timer(int value)
 {
-	if (seconds % 10 == 0)
-	{
-		//		std::cout << "seconds: " << seconds / 10 << std::endl;
-		//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::tuple<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
-		//		std::cout << "" << std::endl;
-	}
+	//	if (seconds % 10 == 0)
+	//	{
+	//		std::cout << "seconds: " << seconds / 10 << std::endl;
+	//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::tuple<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
+	//		std::cout << "" << std::endl;
+	//	}
 	removeAllConnections();
 	for (int i = 0; i < boids.size(); i++)
 	{
 		boids[i].updatePosition();
-		if (i != 0)
-		{
-			boids[i].setColor(1.0, 1.0, 1.0);
-		}
+		//		if (i != 0)
+		//		{
+		//			boids[i].setColor(1.0, 1.0, 1.0);
+		//		}
 		findGrid(i, boids[i].x, boids[i].y);
 	}
 	updateGrids();
@@ -628,10 +627,10 @@ int main(int argc, char* argv[])
 	{
 		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
 		findGrid(i, boids[i].x, boids[i].y);
-		if (i == 0)
-		{
-			boids[i].setColor(1.0, 0.0, 0.0);
-		}
+		//		if (i == 0)
+		//		{
+		//			boids[i].setColor(1.0, 0.0, 0.0);
+		//		}
 	}
 	for (int i = 0; i < BLOCK_NO; ++i)
 	{
