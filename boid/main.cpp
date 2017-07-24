@@ -169,7 +169,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 		}
 		if (mouseState == 2)
 		{
-			if (dist - MOUSE_SIZE - boid.size < R_2)
+			if (true)
 			{
 				/*rule2*/
 				n2++;
@@ -179,7 +179,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 			{
 				/*rule3*/
 				n3++;
-				q3 += Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_3;
+				q3 += MOUSE_ATTRACTION_FORCE * Eigen::Vector2d(mouseX - boid.x, mouseY - boid.y) / dist / dist * R_3;
 			}
 		}
 	}
