@@ -371,7 +371,7 @@ void coloringGrids()
 				glColor3d(0.3, 0.3, 0.3);
 			}
 
-			static const GLfloat vtx4[] = {
+			GLfloat vtx4[] = {
 				grids[i][j].left, grids[i][j].top,
 				grids[i][j].left, grids[i][j].bottom,
 				grids[i][j].right, grids[i][j].bottom,
