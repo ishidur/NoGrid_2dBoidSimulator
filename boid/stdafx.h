@@ -11,5 +11,6 @@
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください
 
+#include <GL/glew.h>
 #include <GL/glut.h>
 #include "parameters.h" //import common parameters
