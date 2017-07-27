@@ -239,11 +239,6 @@ void drawConnections()
 		//		glLineWidth(4.0f);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glDrawArrays(GL_LINES, 0, 2);
-		//		glDisableClientState(GL_VERTEX_ARRAY);
-		//		glBegin(GL_LINES);
-		//		glVertex2d(boids[std::get<0>(tuple)].x, boids[std::get<0>(tuple)].y);
-		//		glVertex2d(boids[std::get<1>(tuple)].x, boids[std::get<1>(tuple)].y);
-		//		glEnd();
 	}
 }
 
@@ -251,58 +246,33 @@ void drawWall()
 {
 	glColor3d(0.5, 0.5, 0.5);
 	double boundary = BOUNDARY;
-	// éläpå`
 	static const GLfloat vtx41[] = {
 		boundary, boundary,
 		boundary - WALL_SIZE, boundary,
 		boundary - WALL_SIZE, -boundary,
 		boundary, -boundary
 	};
-
 	glVertexPointer(2, GL_FLOAT, 0, vtx41);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 4);
-	//	glBegin(GL_POLYGON);
-	//	glVertex2d(boundary, boundary);
-	//	glVertex2d(boundary - WALL_SIZE, boundary);
-	//	glVertex2d(boundary - WALL_SIZE, -boundary);
-	//	glVertex2d(boundary, -boundary);
-	//	glEnd();
-	// éläpå`
 	static const GLfloat vtx42[] = {
 		boundary, boundary,
 		boundary, boundary - WALL_SIZE,
 		-boundary, boundary - WALL_SIZE,
 		-boundary, boundary
 	};
-
 	glVertexPointer(2, GL_FLOAT, 0, vtx42);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 4);
-	//	glBegin(GL_POLYGON);
-	//	glVertex2d(boundary, boundary);
-	//	glVertex2d(boundary, boundary - WALL_SIZE);
-	//	glVertex2d(-boundary, boundary - WALL_SIZE);
-	//	glVertex2d(-boundary, boundary);
-	//	glEnd();
-	// éläpå`
 	static const GLfloat vtx43[] = {
 		-boundary, -boundary,
 		-boundary, -boundary + WALL_SIZE,
 		boundary, -boundary + WALL_SIZE,
 		boundary, -boundary
 	};
-
 	glVertexPointer(2, GL_FLOAT, 0, vtx43);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 4);
-	//	glBegin(GL_POLYGON);
-	//	glVertex2d(-boundary, -boundary);
-	//	glVertex2d(-boundary, -boundary + WALL_SIZE);
-	//	glVertex2d(boundary, -boundary + WALL_SIZE);
-	//	glVertex2d(boundary, -boundary);
-	//	glEnd();
-	// éläpå`
 	static const GLfloat vtx44[] = {
 		-boundary, -boundary,
 		-boundary + WALL_SIZE, -boundary,
@@ -313,12 +283,6 @@ void drawWall()
 	glVertexPointer(2, GL_FLOAT, 0, vtx44);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 4);
-	//	glBegin(GL_POLYGON);
-	//	glVertex2d(-boundary, -boundary);
-	//	glVertex2d(-boundary + WALL_SIZE, -boundary);
-	//	glVertex2d(-boundary + WALL_SIZE, boundary);
-	//	glVertex2d(-boundary, boundary);
-	//	glEnd();
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -382,12 +346,6 @@ void coloringGrids()
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glDrawArrays(GL_POLYGON, 0, 4);
 			glDisableClientState(GL_VERTEX_ARRAY);
-			//			glBegin(GL_POLYGON);
-			//			glVertex2d(grids[i][j].left, grids[i][j].top);
-			//			glVertex2d(grids[i][j].left, grids[i][j].bottom);
-			//			glVertex2d(grids[i][j].right, grids[i][j].bottom);
-			//			glVertex2d(grids[i][j].right, grids[i][j].top);
-			//			glEnd();
 		}
 	}
 }
@@ -527,12 +485,6 @@ void display(void)
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		//		glBegin(GL_POLYGON);
-		//		for (int i = 0; i < CIRCLE_SLICE; ++i)
-		//		{
-		//			glVertex2d(BLOCK_SIZE * cos(double(i) * angl), BLOCK_SIZE * sin(double(i) * angl));
-		//		}
-		//		glEnd();
 		glPopMatrix();
 	}
 	glFlush();

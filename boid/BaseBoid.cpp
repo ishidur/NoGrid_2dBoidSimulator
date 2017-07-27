@@ -55,11 +55,6 @@ void BaseBoid::drawBaseBoid()
 	glVertexPointer(2, GL_FLOAT, 0, vtx3);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 3);
-//	glBegin(GL_POLYGON);
-//	glVertex2d(0.0, size);
-//	glVertex2d(-0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
-//	glVertex2d(0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
-//	glEnd();
 	glPopMatrix();
 }
 

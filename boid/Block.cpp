@@ -35,12 +35,6 @@ void Block::drawBlock()
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
 	glDisableClientState(GL_VERTEX_ARRAY);
-//	glBegin(GL_POLYGON);
-//	for (int i = 0; i < CIRCLE_SLICE; ++i)
-//	{
-//		glVertex2d(r * cos(double(i) * angl), r * sin(double(i) * angl));
-//	}
-//	glEnd();
 	glPopMatrix();
 }
 
