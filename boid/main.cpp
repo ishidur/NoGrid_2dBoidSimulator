@@ -370,12 +370,24 @@ void coloringGrids()
 			{
 				glColor3d(0.3, 0.3, 0.3);
 			}
-			glBegin(GL_POLYGON);
-			glVertex2d(grids[i][j].left, grids[i][j].top);
-			glVertex2d(grids[i][j].left, grids[i][j].bottom);
-			glVertex2d(grids[i][j].right, grids[i][j].bottom);
-			glVertex2d(grids[i][j].right, grids[i][j].top);
-			glEnd();
+
+			static const GLfloat vtx4[] = {
+				grids[i][j].left, grids[i][j].top,
+				grids[i][j].left, grids[i][j].bottom,
+				grids[i][j].right, grids[i][j].bottom,
+				grids[i][j].right, grids[i][j].top,
+			};
+
+			glVertexPointer(2, GL_FLOAT, 0, vtx4);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glDrawArrays(GL_POLYGON, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
+			//			glBegin(GL_POLYGON);
+			//			glVertex2d(grids[i][j].left, grids[i][j].top);
+			//			glVertex2d(grids[i][j].left, grids[i][j].bottom);
+			//			glVertex2d(grids[i][j].right, grids[i][j].bottom);
+			//			glVertex2d(grids[i][j].right, grids[i][j].top);
+			//			glEnd();
 		}
 	}
 }
