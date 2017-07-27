@@ -45,11 +45,21 @@ void BaseBoid::drawBaseBoid()
 	glPushMatrix();
 	glTranslated(x, y, 0.0);
 	glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
-	glBegin(GL_POLYGON);
-	glVertex2d(0.0, size);
-	glVertex2d(-0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
-	glVertex2d(0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
-	glEnd();
+
+	static const GLfloat vtx3[] = {
+		0.0, size,
+		-0.4 * size * sqrt(3.0) / 2.0, -size / 2.0,
+		0.4 * size * sqrt(3.0) / 2.0, -size / 2.0,
+	};
+
+	glVertexPointer(2, GL_FLOAT, 0, vtx3);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_POLYGON, 0, 3);
+//	glBegin(GL_POLYGON);
+//	glVertex2d(0.0, size);
+//	glVertex2d(-0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
+//	glVertex2d(0.4 * size * sqrt(3.0) / 2.0, -size / 2.0);
+//	glEnd();
 	glPopMatrix();
 }
 
