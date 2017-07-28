@@ -15,6 +15,9 @@
 #include "Block.h"
 #include "Eigen/Core"
 
+#define BUFFER_OFFSET(bytes) ((GLubyte *)NULL + (bytes))
+static GLuint buffers[1];
+
 int seconds = 0; //seconds
 int mouseState = 0; //0 is not pressed, 1 is distractor, 2 is attractor
 double mouseX = 0.0;
@@ -437,17 +440,25 @@ void display(void)
 	//	coloringGrids();
 	drawWall();
 	drawConnections();
-	std::vector<GLfloat> vtxs;
-	for (auto boid : boids)
-	{
-		std::vector<GLfloat> v2 = boid.drawBaseBoid();
-		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
-	}
-	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
-	glDisableClientState(GL_VERTEX_ARRAY);
+	//	std::vector<GLfloat> vtxs;
+	//	for (auto boid : boids)
+	//	{
+	//		std::vector<GLfloat> v2 = boid.drawBaseBoid();
+	//		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
+	//	}
+	//	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
+	//	glEnableClientState(GL_VERTEX_ARRAY);
+	//	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
+	//	glDisableClientState(GL_VERTEX_ARRAY);
 
+	glEnableClientState(GL_VERTEX_ARRAY);
+	int a = boids.size() * 3;
+	/* 頂点データの場所を指定する */
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+	glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_TRIANGLES, 0, a);
+	glDisableClientState(GL_VERTEX_ARRAY);
 	for (auto block : blocks)
 	{
 		if (!block.disabled)
@@ -647,6 +658,16 @@ void timer(int value)
 void init(void)
 {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glGenBuffers(1, buffers);
+	std::vector<GLfloat> vtxs;
+
+	for (auto boid : boids)
+	{
+		std::vector<GLfloat> v2 = boid.drawBaseBoid();
+		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof vtxs.data(), vtxs.data(), GL_STATIC_DRAW);
 }
 
 int main(int argc, char* argv[])
@@ -656,13 +677,13 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
+	glewInit();
 	printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 	printf("Vendor: %s\n", glGetString(GL_VENDOR));
 	printf("GPU: %s\n", glGetString(GL_RENDERER));
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutKeyboardFunc(key);
-	init();
 	createGrids();
 
 	for (int i = 0; i < BOIDS_NO; i++)
@@ -680,6 +701,7 @@ int main(int argc, char* argv[])
 		whereBlock(i, blocks[i].x, blocks[i].y);
 	}
 	updateGrids();
+	init();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
 	glutTimerFunc(FLAME_RATE, timer, seconds);
