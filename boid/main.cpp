@@ -436,10 +436,17 @@ void display(void)
 	//	coloringGrids();
 	drawWall();
 	drawConnections();
+	std::vector<GLfloat> vtxs;
 	for (auto boid : boids)
 	{
-		boid.drawBaseBoid();
+		std::vector<GLfloat> v2 = boid.drawBaseBoid();
+		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
 	}
+	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_TRIANGLES, 0, vtxs.size());
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	for (auto block : blocks)
 	{
 		if (!block.disabled)
