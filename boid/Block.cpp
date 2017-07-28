@@ -23,12 +23,18 @@ void Block::drawBlock()
 	glColor3d(red, green, blue);
 	glPushMatrix();
 	glTranslated(x, y, 0.0);
-	glBegin(GL_POLYGON);
+	GLfloat vtxs[CIRCLE_SLICE * 2] = {0.0};
+	int j = 0;
 	for (int i = 0; i < CIRCLE_SLICE; ++i)
 	{
-		glVertex2d(r * cos(double(i) * angl), r * sin(double(i) * angl));
+		j = i * 2;
+		vtxs[j] = GLfloat(r * cos(double(i) * angl));
+		vtxs[j + 1] = GLfloat(r * sin(double(i) * angl));
 	}
-	glEnd();
+	glVertexPointer(2, GL_FLOAT, 0, vtxs);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
+	glDisableClientState(GL_VERTEX_ARRAY);
 	glPopMatrix();
 }
 

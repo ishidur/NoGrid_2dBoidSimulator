@@ -228,44 +228,63 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 
 void drawConnections()
 {
-	glColor3d(0.6, 0.6, 0.6);
+	glColor3d(1.0, 1.0, 1.0);
+	std::vector<GLfloat> vtxs;
 	for (auto tuple: boidConnections)
 	{
-		glBegin(GL_LINES);
-		glVertex2d(boids[std::get<0>(tuple)].x, boids[std::get<0>(tuple)].y);
-		glVertex2d(boids[std::get<1>(tuple)].x, boids[std::get<1>(tuple)].y);
-		glEnd();
+		std::vector<GLfloat> vtx2 = {
+			GLfloat(boids[std::get<0>(tuple)].x), GLfloat(boids[std::get<0>(tuple)].y),
+			GLfloat(boids[std::get<1>(tuple)].x), GLfloat(boids[std::get<1>(tuple)].y),
+		};
+		vtxs.insert(vtxs.end(), vtx2.begin(), vtx2.end());
 	}
+
+	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
+	//		glLineWidth(4.0f);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_LINES, 0, vtxs.size() / 2);
+	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 void drawWall()
 {
 	glColor3d(0.5, 0.5, 0.5);
 	double boundary = BOUNDARY;
-	glBegin(GL_POLYGON);
-	glVertex2d(boundary, boundary);
-	glVertex2d(boundary - WALL_SIZE, boundary);
-	glVertex2d(boundary - WALL_SIZE, -boundary);
-	glVertex2d(boundary, -boundary);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glVertex2d(boundary, boundary);
-	glVertex2d(boundary, boundary - WALL_SIZE);
-	glVertex2d(-boundary, boundary - WALL_SIZE);
-	glVertex2d(-boundary, boundary);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glVertex2d(-boundary, -boundary);
-	glVertex2d(-boundary, -boundary + WALL_SIZE);
-	glVertex2d(boundary, -boundary + WALL_SIZE);
-	glVertex2d(boundary, -boundary);
-	glEnd();
-	glBegin(GL_POLYGON);
-	glVertex2d(-boundary, -boundary);
-	glVertex2d(-boundary + WALL_SIZE, -boundary);
-	glVertex2d(-boundary + WALL_SIZE, boundary);
-	glVertex2d(-boundary, boundary);
-	glEnd();
+	static const GLfloat vtx41[] = {
+		boundary, boundary,
+		boundary - WALL_SIZE, boundary,
+		boundary - WALL_SIZE, -boundary,
+		boundary, -boundary
+	};
+	glVertexPointer(2, GL_FLOAT, 0, vtx41);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_POLYGON, 0, 4);
+	static const GLfloat vtx42[] = {
+		boundary, boundary,
+		boundary, boundary - WALL_SIZE,
+		-boundary, boundary - WALL_SIZE,
+		-boundary, boundary
+	};
+	glVertexPointer(2, GL_FLOAT, 0, vtx42);
+	glDrawArrays(GL_POLYGON, 0, 4);
+	static const GLfloat vtx43[] = {
+		-boundary, -boundary,
+		-boundary, -boundary + WALL_SIZE,
+		boundary, -boundary + WALL_SIZE,
+		boundary, -boundary
+	};
+	glVertexPointer(2, GL_FLOAT, 0, vtx43);
+	glDrawArrays(GL_POLYGON, 0, 4);
+	static const GLfloat vtx44[] = {
+		-boundary, -boundary,
+		-boundary + WALL_SIZE, -boundary,
+		-boundary + WALL_SIZE, boundary,
+		-boundary, boundary
+	};
+
+	glVertexPointer(2, GL_FLOAT, 0, vtx44);
+	glDrawArrays(GL_QUADS, 0, 4);
+	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 //this function needs grids
@@ -316,12 +335,18 @@ void coloringGrids()
 			{
 				glColor3d(0.3, 0.3, 0.3);
 			}
-			glBegin(GL_POLYGON);
-			glVertex2d(grids[i][j].left, grids[i][j].top);
-			glVertex2d(grids[i][j].left, grids[i][j].bottom);
-			glVertex2d(grids[i][j].right, grids[i][j].bottom);
-			glVertex2d(grids[i][j].right, grids[i][j].top);
-			glEnd();
+
+			GLfloat vtx4[] = {
+				grids[i][j].left, grids[i][j].top,
+				grids[i][j].left, grids[i][j].bottom,
+				grids[i][j].right, grids[i][j].bottom,
+				grids[i][j].right, grids[i][j].top,
+			};
+
+			glVertexPointer(2, GL_FLOAT, 0, vtx4);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glDrawArrays(GL_POLYGON, 0, 4);
+			glDisableClientState(GL_VERTEX_ARRAY);
 		}
 	}
 }
@@ -412,10 +437,17 @@ void display(void)
 	//	coloringGrids();
 	drawWall();
 	drawConnections();
+	std::vector<GLfloat> vtxs;
 	for (auto boid : boids)
 	{
-		boid.drawBaseBoid();
+		std::vector<GLfloat> v2 = boid.drawBaseBoid();
+		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
 	}
+	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	for (auto block : blocks)
 	{
 		if (!block.disabled)
@@ -448,12 +480,19 @@ void display(void)
 		glColor3d(r, g, b);
 		glPushMatrix();
 		glTranslated(mouseX, mouseY, 0.0);
-		glBegin(GL_POLYGON);
+
+		GLfloat vtxs[CIRCLE_SLICE * 2] = {0.0};
+		int j = 0;
 		for (int i = 0; i < CIRCLE_SLICE; ++i)
 		{
-			glVertex2d(BLOCK_SIZE * cos(double(i) * angl), BLOCK_SIZE * sin(double(i) * angl));
+			j = i * 2;
+			vtxs[j] = GLfloat(BLOCK_SIZE * cos(double(i) * angl));
+			vtxs[j + 1] = GLfloat(BLOCK_SIZE * sin(double(i) * angl));
 		}
-		glEnd();
+		glVertexPointer(2, GL_FLOAT, 0, vtxs);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
+		glDisableClientState(GL_VERTEX_ARRAY);
 		glPopMatrix();
 	}
 	glFlush();
@@ -617,6 +656,9 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
+	printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+	printf("Vendor: %s\n", glGetString(GL_VENDOR));
+	printf("GPU: %s\n", glGetString(GL_RENDERER));
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutKeyboardFunc(key);
@@ -644,3 +686,143 @@ int main(int argc, char* argv[])
 	glutMainLoop();
 	return 0;
 }
+
+//
+////-------- 各種外部変数 ----------//
+//float points[] =
+//{
+//	0,1,0,
+//	-0.5, 0,0,
+//	0.5, 0,0
+//};
+//
+////VBO用ID
+//GLuint VboId[1];
+//
+////----------- 関数プロトタイプ ----------------//
+//void display();
+//void reshape(int w, int h);
+//void timer(int value);
+//void BuildVBO();
+//
+//
+////----------- OpenGLの初期設定 ---------------//
+//void GLUT_INIT()
+//{
+//	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+//	glutCreateWindow("VBO ");
+//}
+//
+//void GLUT_CALL_FUNC()
+//{
+//	glutDisplayFunc(display);
+//	glutReshapeFunc(reshape);
+//	glutTimerFunc(0, timer, 17);
+//}
+//
+//bool GLEW_INIT()
+//{
+//	GLenum err;
+//	err = glewInit();
+//	if (err != GLEW_OK) {
+//		std::cerr << glewGetErrorString(err) << "\n";
+//		return false;
+//	}
+//	return true;
+//}
+//
+//void MY_INIT()
+//{
+//	glClearColor(1.0, 1.0, 1.0, 1.0);
+//}
+//
+////---------- メイン関数 ---------------//
+//int main(int argc, char **argv)
+//{
+//	glutInit(&argc, argv);
+//	GLUT_INIT();
+//	GLUT_CALL_FUNC();
+//	MY_INIT();
+//
+//	if (GLEW_INIT() == false) {
+//		return -1;
+//	}
+//
+//	BuildVBO();
+//	glutMainLoop();
+//
+//	return 0;
+//}
+
+////------------- ここから各種コールバック ------------------//
+//void display()
+//{
+//	static float angle = 0;
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//	glColor3f(1, 0, 1);
+//
+//	//VBOで描画
+//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]);
+//	glEnableClientState(GL_VERTEX_ARRAY);
+//	glVertexPointer(3, GL_FLOAT, 0, 0);  //最後の引数は「0」を指定
+//	glDrawArrays(GL_TRIANGLES, 0, 3);
+//	glDisableClientState(GL_VERTEX_ARRAY);
+//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+//
+//	glColor3f(1, 1, 1);
+//
+//	glutSwapBuffers();
+//
+//
+//	//アップデート
+//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]);
+//	float *ptr = (float*)glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_READ_WRITE_ARB);
+//	if (ptr)
+//	{
+//		ptr[2] = sin(angle); //1つ目の頂点、z座標を動かす
+//		angle += 0.1;
+//		if (angle > 360) angle = 0;
+//		glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+//	}
+//
+//}
+//
+//void reshape(int w, int h)
+//{
+//	glViewport(0, 0, w, h);  //ビューポートの設定
+//
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0); //視野の設定
+//	glMatrixMode(GL_MODELVIEW);
+//
+//	glLoadIdentity();
+//	gluLookAt(3.0, 4.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); //視点の設定
+//}
+//
+//void timer(int t)
+//{
+//	glutPostRedisplay();
+//	glutTimerFunc(t, timer, 17); //タイマー関数
+//}
+//
+//
+////--------------------------//
+//void BuildVBO()
+//{
+//	glGenBuffersARB(1, &VboId[0]);   //発生
+//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]); //バインド
+//
+//													//データをVBOにコピー
+//	glBufferDataARB(GL_ARRAY_BUFFER_ARB, 3 * 3 * sizeof(float), points, GL_DYNAMIC_DRAW);
+//
+//	//例外チェック(VBOと配列のサイズがあっているか？)
+//	int bufferSize = 0;
+//	glGetBufferParameterivARB(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
+//	if (3 * 3 * sizeof(float) != bufferSize) {//一致していない場合
+//		glDeleteBuffersARB(1, &VboId[0]);
+//		VboId[0] = 0;
+//		std::cout << "Can't Create VBO\n";
+//	}
+//
+//}

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Eigen/Core"
+#include "Eigen/Geometry"
 #include <vector>
 
 
@@ -40,7 +41,7 @@ public:
 
 	void setSize(double size);
 
-	void drawBaseBoid();
+	std::vector<GLfloat> drawBaseBoid();
 
 	void updatePosition();
 
