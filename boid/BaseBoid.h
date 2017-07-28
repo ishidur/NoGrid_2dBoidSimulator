@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "Eigen/Core"
-#include "Eigen/Geometry"
 #include <vector>
 
 
@@ -17,7 +16,6 @@ public:
 	double angle; //radian angle: 0 is top
 	double size = BOID_SIZE; //boid size
 	Eigen::Vector2d vctr; //
-	double speed; // speed
 	int grid_y = -1; //grid address y
 	int grid_x = -1; //grid address x
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW

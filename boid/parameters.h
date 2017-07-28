@@ -11,11 +11,11 @@
 #define NEAR_GRID_NO 3 //number of near grid where boid can see
 #define WALL_SIZE 5.0 //size of wall
 #define BOID_SIZE 15.0 //size of boid
-#define BLOCK_SIZE 15.0 //size of block
+#define BLOCK_SIZE 10.0 //size of block
 #define MOUSE_SIZE 10.0 //size of mouse pointer
 #define BOID_SPEED 3.0 //initial boid speed
-#define BOIDS_NO 100 //initial number of boids
-#define BLOCK_NO 0 //initial number of blocks
+#define BOIDS_NO 80 //initial number of boids
+#define BLOCK_NO 10 //initial number of blocks
 #define CIRCLE_SLICE 10 //circle slices
 #define FLAME_RATE 100 //rerender after this FLAME_RATE milliseconds
 #define WINDOW_SIZE 500 //window size

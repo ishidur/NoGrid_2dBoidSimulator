@@ -21,21 +21,19 @@ void Block::drawBlock()
 {
 	double angl = 2.0 * M_PI / CIRCLE_SLICE;
 	glColor3d(red, green, blue);
-	glPushMatrix();
-	glTranslated(x, y, 0.0);
-	GLfloat vtxs[CIRCLE_SLICE * 2] = {0.0};
-	int j = 0;
-	for (int i = 0; i < CIRCLE_SLICE; ++i)
+	GLfloat vtxs[CIRCLE_SLICE * 2 + 4] = {0.0};
+	vtxs[0] = GLfloat(x);
+	vtxs[1] = GLfloat(y);
+	for (int i = 1; i <= CIRCLE_SLICE + 1; ++i)
 	{
-		j = i * 2;
-		vtxs[j] = GLfloat(r * cos(double(i) * angl));
-		vtxs[j + 1] = GLfloat(r * sin(double(i) * angl));
+		int j = i * 2;
+		vtxs[j] = GLfloat(r * cos(double(i) * angl) + x);
+		vtxs[j + 1] = GLfloat(r * sin(double(i) * angl) + y);
 	}
 	glVertexPointer(2, GL_FLOAT, 0, vtxs);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, CIRCLE_SLICE + 2);
 	glDisableClientState(GL_VERTEX_ARRAY);
-	glPopMatrix();
 }
 
 void Block::setDisabled()

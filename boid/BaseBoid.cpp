@@ -27,7 +27,6 @@ BaseBoid::BaseBoid(double _x, double _y, double _angle, double _size, double _sp
 	x = _x;
 	y = _y;
 	angle = _angle;
-	speed = _speed;
 	size = _size;
 	vctr = Eigen::Vector2d(-sin(_angle) * _speed, cos(_angle) * _speed);
 }
@@ -42,26 +41,15 @@ void BaseBoid::setColor(double red, double green, double blue)
 std::vector<GLfloat> BaseBoid::drawBaseBoid()
 {
 	glColor3d(r, g, b);
-	//	glPushMatrix();
-	//	glTranslated(x, y, 0.0);
-	//	glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
-
 	std::vector<GLfloat> vtx3 = {
 		GLfloat(0.0 * cos(angle) + size * (-sin(angle)) + x), GLfloat(0.0 * sin(angle) + size * cos(angle) + y),
 		GLfloat(-0.4 * size * sqrt(3.0) / 2.0 * cos(angle) + (-size / 2.0) * (-sin(angle)) + x), GLfloat(-0.4 * size * sqrt(3.0) / 2.0 * sin(angle) + (-size / 2.0) * cos(angle) + y),
 		GLfloat(0.4 * size * sqrt(3.0) / 2.0 * cos(angle) + (-size / 2.0) * (-sin(angle)) + x), GLfloat(0.4 * size * sqrt(3.0) / 2.0 * sin(angle) + (-size / 2.0) * cos(angle) + y),
 	};
-	
-	//	std::vector<GLfloat> vtx3 = {
-	//		0.0, GLfloat(size),
-	//		GLfloat (-0.4 * size * sqrt(3.0) / 2.0), GLfloat (-size / 2.0),
-	//		GLfloat(0.4 * size * sqrt(3.0) / 2.0), GLfloat(-size / 2.0),
-	//	};
 	return vtx3;
 	//	glVertexPointer(2, GL_FLOAT, 0, vtx3.data());
 	//	glEnableClientState(GL_VERTEX_ARRAY);
 	//	glDrawArrays(GL_TRIANGLES, 0, 3);
-	//	glPopMatrix();
 }
 
 void BaseBoid::updatePosition()

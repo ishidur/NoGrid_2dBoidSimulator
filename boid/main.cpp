@@ -30,9 +30,9 @@ Grid grids[GRID_NO + NEAR_GRID_NO * 2][GRID_NO + NEAR_GRID_NO * 2];
 std::vector<Block> blocks;
 std::vector<std::tuple<int, int>> boidConnections;
 
-void addConnections(std::vector<std::tuple<int, int>> newConnection)
+void addConnections(std::vector<std::tuple<int, int>> newConnections)
 {
-	boidConnections.insert(boidConnections.end(), newConnection.begin(), newConnection.end());
+	boidConnections.insert(boidConnections.end(), newConnections.begin(), newConnections.end());
 }
 
 void uniqleConnections()
@@ -226,8 +226,8 @@ std::tuple<BaseBoid, std::vector<std::tuple<int, int>>> updateSpeedAndAngle(Base
 	}
 	Eigen::Vector2d V = ALPHA_1 * q1.normalized() + ALPHA_2 * q2 - ALPHA_3 * q3 - ALPHA_4 * q4 + ALPHA_5 * boid.vctr.normalized() - REPEL_WALL_WEIGHT * wallRepel;
 	boid.angle = Direction(V).angle;
-	boid.speed = BETA * log(V.norm() + 1.0);
-	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
+	double speed = BETA * log(V.norm() + 1.0);
+	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * speed, cos(boid.angle) * speed);
 	return std::forward_as_tuple(boid, connections);
 }
 
@@ -235,14 +235,18 @@ void drawConnections()
 {
 	glColor3d(0.8, 0.8, 0.8);
 	std::vector<GLfloat> vtxs;
-	for (auto tuple: boidConnections)
+	std::mutex mtx;
+
+	Concurrency::parallel_for<int>(0, boidConnections.size(), 1, [&mtx, &vtxs](int i)
 	{
 		std::vector<GLfloat> vtx2 = {
-			GLfloat(boids[std::get<0>(tuple)].x), GLfloat(boids[std::get<0>(tuple)].y),
-			GLfloat(boids[std::get<1>(tuple)].x), GLfloat(boids[std::get<1>(tuple)].y),
+			GLfloat(boids[std::get<0>(boidConnections[i])].x), GLfloat(boids[std::get<0>(boidConnections[i])].y),
+			GLfloat(boids[std::get<1>(boidConnections[i])].x), GLfloat(boids[std::get<1>(boidConnections[i])].y),
 		};
+		mtx.lock();
 		vtxs.insert(vtxs.end(), vtx2.begin(), vtx2.end());
-	}
+		mtx.unlock();
+	});
 
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	//		glLineWidth(4.0f);
@@ -259,36 +263,24 @@ void drawWall()
 		boundary, boundary,
 		boundary - WALL_SIZE, boundary,
 		boundary - WALL_SIZE, -boundary,
-		boundary, -boundary
-	};
-	glVertexPointer(2, GL_FLOAT, 0, vtx41);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_POLYGON, 0, 4);
-	static const GLfloat vtx42[] = {
+		boundary, -boundary,
 		boundary, boundary,
 		boundary, boundary - WALL_SIZE,
 		-boundary, boundary - WALL_SIZE,
-		-boundary, boundary
-	};
-	glVertexPointer(2, GL_FLOAT, 0, vtx42);
-	glDrawArrays(GL_POLYGON, 0, 4);
-	static const GLfloat vtx43[] = {
+		-boundary, boundary,
 		-boundary, -boundary,
 		-boundary, -boundary + WALL_SIZE,
 		boundary, -boundary + WALL_SIZE,
-		boundary, -boundary
-	};
-	glVertexPointer(2, GL_FLOAT, 0, vtx43);
-	glDrawArrays(GL_POLYGON, 0, 4);
-	static const GLfloat vtx44[] = {
+		boundary, -boundary,
 		-boundary, -boundary,
 		-boundary + WALL_SIZE, -boundary,
 		-boundary + WALL_SIZE, boundary,
 		-boundary, boundary
 	};
+	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glVertexPointer(2, GL_FLOAT, 0, vtx44);
-	glDrawArrays(GL_QUADS, 0, 4);
+	glVertexPointer(2, GL_FLOAT, 0, vtx41);
+	glDrawArrays(GL_QUADS, 0, 16);
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -443,17 +435,21 @@ void display(void)
 	drawWall();
 	drawConnections();
 	std::vector<GLfloat> vtxs;
-	for (auto boid : boids)
+	std::mutex mtx;
+
+	Concurrency::parallel_for<int>(0, boids.size(), 1, [&mtx, &vtxs](int i)
 	{
-		std::vector<GLfloat> v2 = boid.drawBaseBoid();
+		std::vector<GLfloat> v2 = boids[i].drawBaseBoid();
+		mtx.lock();
 		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
-	}
+		mtx.unlock();
+	});
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-	for (auto block : blocks)
+	for (Block block : blocks)
 	{
 		if (!block.disabled)
 		{
@@ -483,22 +479,19 @@ void display(void)
 
 		double angl = 2.0 * M_PI / CIRCLE_SLICE;
 		glColor3d(r, g, b);
-		glPushMatrix();
-		glTranslated(mouseX, mouseY, 0.0);
-
-		GLfloat mouseVtxs[CIRCLE_SLICE * 2] = {0.0};
-		int j = 0;
-		for (int i = 0; i < CIRCLE_SLICE; ++i)
+		GLfloat mouseVtxs[CIRCLE_SLICE * 2 + 4] = { 0.0 };
+		mouseVtxs[0] = GLfloat(mouseX);
+		mouseVtxs[1] = GLfloat(mouseY);
+		for (int i = 1; i <= CIRCLE_SLICE + 1; ++i)
 		{
-			j = i * 2;
-			mouseVtxs[j] = GLfloat(BLOCK_SIZE * cos(double(i) * angl));
-			mouseVtxs[j + 1] = GLfloat(BLOCK_SIZE * sin(double(i) * angl));
+			int j = i * 2;
+			mouseVtxs[j] = GLfloat(MOUSE_SIZE * cos(double(i) * angl) + mouseX);
+			mouseVtxs[j + 1] = GLfloat(MOUSE_SIZE * sin(double(i) * angl) + mouseY);
 		}
 		glVertexPointer(2, GL_FLOAT, 0, mouseVtxs);
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, CIRCLE_SLICE + 2);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		glPopMatrix();
 	}
 	glFlush();
 }
@@ -662,9 +655,9 @@ void timer(int value)
                                });
 	addConnections(connections);
 	uniqleConnections();
+	glutPostRedisplay();
 	clock_t end = clock(); // end
 	std::cout << "duration = " << float(end - start) / CLOCKS_PER_SEC << "sec\r" << std::flush;
-	glutPostRedisplay();
 	seconds++;
 	glutTimerFunc(FLAME_RATE, timer, seconds);
 }
