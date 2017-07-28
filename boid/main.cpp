@@ -242,7 +242,7 @@ void drawConnections()
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	//		glLineWidth(4.0f);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_LINES, 0, vtxs.size()/2);
+	glDrawArrays(GL_LINES, 0, vtxs.size() / 2);
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -445,7 +445,7 @@ void display(void)
 	}
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_TRIANGLES, 0, vtxs.size()/2);
+	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	for (auto block : blocks)
@@ -657,42 +657,13 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
 	printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-	printf("Vecdor: %s\n", glGetString(GL_VENDOR));
+	printf("Vendor: %s\n", glGetString(GL_VENDOR));
 	printf("GPU: %s\n", glGetString(GL_RENDERER));
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutKeyboardFunc(key);
 	init();
 	createGrids();
-
-	//	glutInit(&argc, argv);
-
-	//	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-	//	glutCreateWindow("VBO ");
-	//	glutDisplayFunc(display);
-	//	glutReshapeFunc(reshape);
-	//	glutTimerFunc(0, timer, 17);
-	//	glClearColor(1.0, 1.0, 1.0, 1.0);
-	//
-	//	GLenum err;
-	//	err = glewInit();
-	//
-
-	//	glGenBuffersARB(1, &VboId[0]);   //発生
-	//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]); //バインド
-	//
-	//													//データをVBOにコピー
-	//	glBufferDataARB(GL_ARRAY_BUFFER_ARB, 3 * 3 * sizeof(float), points, GL_DYNAMIC_DRAW);
-	//
-	//	//例外チェック(VBOと配列のサイズがあっているか？)
-	//	int bufferSize = 0;
-	//	glGetBufferParameterivARB(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-	//	if (3 * 3 * sizeof(float) != bufferSize) {//一致していない場合
-	//		glDeleteBuffersARB(1, &VboId[0]);
-	//		VboId[0] = 0;
-	//		std::cout << "Can't Create VBO\n";
-	//	}
-	//	glutMainLoop();
 
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
