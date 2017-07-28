@@ -233,7 +233,7 @@ std::tuple<BaseBoid, std::vector<std::tuple<int, int>>> updateSpeedAndAngle(Base
 
 void drawConnections()
 {
-	glColor3d(1.0, 1.0, 1.0);
+	glColor3d(0.8, 0.8, 0.8);
 	std::vector<GLfloat> vtxs;
 	for (auto tuple: boidConnections)
 	{
@@ -486,15 +486,15 @@ void display(void)
 		glPushMatrix();
 		glTranslated(mouseX, mouseY, 0.0);
 
-		GLfloat vtxs[CIRCLE_SLICE * 2] = {0.0};
+		GLfloat mouseVtxs[CIRCLE_SLICE * 2] = {0.0};
 		int j = 0;
 		for (int i = 0; i < CIRCLE_SLICE; ++i)
 		{
 			j = i * 2;
-			vtxs[j] = GLfloat(BLOCK_SIZE * cos(double(i) * angl));
-			vtxs[j + 1] = GLfloat(BLOCK_SIZE * sin(double(i) * angl));
+			mouseVtxs[j] = GLfloat(BLOCK_SIZE * cos(double(i) * angl));
+			mouseVtxs[j + 1] = GLfloat(BLOCK_SIZE * sin(double(i) * angl));
 		}
-		glVertexPointer(2, GL_FLOAT, 0, vtxs);
+		glVertexPointer(2, GL_FLOAT, 0, mouseVtxs);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glDrawArrays(GL_POLYGON, 0, CIRCLE_SLICE);
 		glDisableClientState(GL_VERTEX_ARRAY);
@@ -518,14 +518,14 @@ void mouse(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON)
 		{
-			std::cout << "\r" << "distractor" << std::endl;
+//			std::cout<< "distractor" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			mouseState = 1;
 		}
 		if (button == GLUT_RIGHT_BUTTON)
 		{
-			std::cout << "\r" << "attractor" << std::endl;
+//			std::cout << "attractor" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			mouseState = 2;
@@ -556,7 +556,7 @@ void key(unsigned char key, int x, int y)
 	{
 		/*remove all blocks*/
 		removeAllBlocks();
-		std::cout << "refresh" << std::endl;
+//		std::cout << "refresh" << std::endl;
 	}
 	if (key == 'i')
 	{
@@ -590,7 +590,7 @@ void key(unsigned char key, int x, int y)
 		int index = findDuplicateBlock(pos_x, pos_y);
 		if (index != -1)
 		{
-			std::cout << "exist" << index << std::endl;
+//			std::cout << "exist" << index << std::endl;
 			removeBlock(index, pos_x, pos_y);
 		}
 		else
@@ -636,6 +636,7 @@ void timer(int value)
 	//		std::for_each(boidConnections.begin(), boidConnections.end(), [](std::tuple<int, int> x) { std::cout << "[" << x.first << ", " << x.second << "]" << "; "; });
 	//		std::cout << "" << std::endl;
 	//	}
+	clock_t start = clock(); // start
 	removeAllConnections();
 	Concurrency::parallel_for<int>(0, boids.size(), 1, [](int i)
                                {
@@ -647,7 +648,6 @@ void timer(int value)
                                });
 	findGrids();
 	updateGrids();
-	clock_t start = clock(); // スタート時間
 	std::vector<std::tuple<int, int>> connections;
 	std::mutex mtx;
 
@@ -662,8 +662,8 @@ void timer(int value)
                                });
 	addConnections(connections);
 	uniqleConnections();
-	clock_t end = clock(); // 終了時間
-	std::cout << "duration = " << double(end - start) / CLOCKS_PER_SEC << "sec.\r" << std::flush;
+	clock_t end = clock(); // end
+	std::cout << "duration = " << float(end - start) / CLOCKS_PER_SEC << "sec\r" << std::flush;
 	glutPostRedisplay();
 	seconds++;
 	glutTimerFunc(FLAME_RATE, timer, seconds);
