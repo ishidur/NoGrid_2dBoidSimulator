@@ -42,35 +42,26 @@ void BaseBoid::setColor(double red, double green, double blue)
 std::vector<GLfloat> BaseBoid::drawBaseBoid()
 {
 	glColor3d(r, g, b);
-//	glPushMatrix();
+	//	glPushMatrix();
 	//	glTranslated(x, y, 0.0);
 	//	glRotated(radianToDegree(angle), 0.0, 0.0, 1.0);
 
-	std::vector<GLfloat> vtx3;
-	Eigen::Rotation2Df rotate(angle);
-	Eigen::Vector2f translation = {x, y};
-	Eigen::Vector2f v = {0.0, size};
-	Eigen::Vector2f v2 = rotate * v + translation;
-	vtx3.push_back(v2.x());
-	vtx3.push_back(v2.y());
-	v = {-0.4 * size * sqrt(3.0) / 2.0, (-size / 2.0)};
-	v2 = rotate * v + translation;
-	vtx3.push_back(v2.x());
-	vtx3.push_back(v2.y());
-	v = {0.4 * size * sqrt(3.0) / 2.0, -size / 2.0};
-	v2 = rotate * v + translation;
-	vtx3.push_back(v2.x());
-	vtx3.push_back(v2.y());
+	std::vector<GLfloat> vtx3 = {
+		GLfloat(0.0 * cos(angle) + size * (-sin(angle)) + x), GLfloat(0.0 * sin(angle) + size * cos(angle) + y),
+		GLfloat(-0.4 * size * sqrt(3.0) / 2.0 * cos(angle) + (-size / 2.0) * (-sin(angle)) + x), GLfloat(-0.4 * size * sqrt(3.0) / 2.0 * sin(angle) + (-size / 2.0) * cos(angle) + y),
+		GLfloat(0.4 * size * sqrt(3.0) / 2.0 * cos(angle) + (-size / 2.0) * (-sin(angle)) + x), GLfloat(0.4 * size * sqrt(3.0) / 2.0 * sin(angle) + (-size / 2.0) * cos(angle) + y),
+	};
+	
 	//	std::vector<GLfloat> vtx3 = {
 	//		0.0, GLfloat(size),
 	//		GLfloat (-0.4 * size * sqrt(3.0) / 2.0), GLfloat (-size / 2.0),
 	//		GLfloat(0.4 * size * sqrt(3.0) / 2.0), GLfloat(-size / 2.0),
 	//	};
 	return vtx3;
-//	glVertexPointer(2, GL_FLOAT, 0, vtx3.data());
-//	glEnableClientState(GL_VERTEX_ARRAY);
-//	glDrawArrays(GL_TRIANGLES, 0, 3);
-//	glPopMatrix();
+	//	glVertexPointer(2, GL_FLOAT, 0, vtx3.data());
+	//	glEnableClientState(GL_VERTEX_ARRAY);
+	//	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//	glPopMatrix();
 }
 
 void BaseBoid::updatePosition()

@@ -228,18 +228,22 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 
 void drawConnections()
 {
-	glColor3d(0.6, 0.6, 0.6);
+	glColor3d(1.0, 1.0, 1.0);
+	std::vector<GLfloat> vtxs;
 	for (auto tuple: boidConnections)
 	{
-		GLfloat vtx2[] = {
-			boids[std::get<0>(tuple)].x, boids[std::get<0>(tuple)].y,
-			boids[std::get<1>(tuple)].x, boids[std::get<1>(tuple)].y,
+		std::vector<GLfloat> vtx2 = {
+			GLfloat(boids[std::get<0>(tuple)].x), GLfloat(boids[std::get<0>(tuple)].y),
+			GLfloat(boids[std::get<1>(tuple)].x), GLfloat(boids[std::get<1>(tuple)].y),
 		};
-		glVertexPointer(2, GL_FLOAT, 0, vtx2);
-		//		glLineWidth(4.0f);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glDrawArrays(GL_LINES, 0, 2);
+		vtxs.insert(vtxs.end(), vtx2.begin(), vtx2.end());
 	}
+
+	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
+	//		glLineWidth(4.0f);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawArrays(GL_LINES, 0, vtxs.size()/2);
+	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 void drawWall()
@@ -262,7 +266,6 @@ void drawWall()
 		-boundary, boundary
 	};
 	glVertexPointer(2, GL_FLOAT, 0, vtx42);
-	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 4);
 	static const GLfloat vtx43[] = {
 		-boundary, -boundary,
@@ -271,7 +274,6 @@ void drawWall()
 		boundary, -boundary
 	};
 	glVertexPointer(2, GL_FLOAT, 0, vtx43);
-	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POLYGON, 0, 4);
 	static const GLfloat vtx44[] = {
 		-boundary, -boundary,
@@ -281,8 +283,7 @@ void drawWall()
 	};
 
 	glVertexPointer(2, GL_FLOAT, 0, vtx44);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_POLYGON, 0, 4);
+	glDrawArrays(GL_QUADS, 0, 4);
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -444,7 +445,7 @@ void display(void)
 	}
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_TRIANGLES, 0, vtxs.size());
+	glDrawArrays(GL_TRIANGLES, 0, vtxs.size()/2);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	for (auto block : blocks)
