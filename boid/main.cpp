@@ -15,9 +15,6 @@
 #include "Block.h"
 #include "Eigen/Core"
 
-#define BUFFER_OFFSET(bytes) ((GLubyte *)NULL + (bytes))
-static GLuint buffers[1];
-
 int seconds = 0; //seconds
 int mouseState = 0; //0 is not pressed, 1 is distractor, 2 is attractor
 double mouseX = 0.0;
@@ -33,9 +30,13 @@ Grid grids[GRID_NO + NEAR_GRID_NO * 2][GRID_NO + NEAR_GRID_NO * 2];
 std::vector<Block> blocks;
 std::vector<std::tuple<int, int>> boidConnections;
 
-void addConnections(std::tuple<int, int> newConnection)
+void addConnections(std::vector<std::tuple<int, int>> newConnection)
 {
-	boidConnections.push_back(newConnection);
+	boidConnections.insert(boidConnections.end(), newConnection.begin(), newConnection.end());
+}
+
+void uniqleConnections()
+{
 	sort(boidConnections.begin(), boidConnections.end());
 	auto result = unique(boidConnections.begin(), boidConnections.end());
 	boidConnections.erase(result, boidConnections.end());
@@ -73,7 +74,7 @@ double degreeToRadian(double deg)
 //this needs for Boid::isVisible
 double _viewAngle = degreeToRadian(THETA_1) / 2.0;
 
-BaseBoid updateSpeedAndAngle(BaseBoid& boid)
+std::tuple<BaseBoid, std::vector<std::tuple<int, int>>> updateSpeedAndAngle(BaseBoid& boid)
 {
 	Eigen::Vector2d q1 = Eigen::Vector2d::Zero();
 	Eigen::Vector2d q2 = Eigen::Vector2d::Zero();
@@ -83,6 +84,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	int n2 = 0;
 	int n3 = 0;
 	int n4 = 0;
+	std::vector<std::tuple<int, int>> connections;
 	auto indexes = getAroundGridBoids(boid.id, boid.grid_x, boid.grid_y);
 	/*loop starts here*/
 	for (auto i : indexes)
@@ -109,8 +111,8 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 					first = boids[i].id;
 					second = boid.id;
 				}
-				std::tuple<int, int> connection = std::make_pair(first, second);
-				addConnections(connection);
+				connections.push_back(std::make_pair(first, second));
+				//				addConnections(connection);
 				/*rule1: Alignment*/
 				n1++;
 				q1 += boids[i].vctr.normalized();
@@ -226,7 +228,7 @@ BaseBoid updateSpeedAndAngle(BaseBoid& boid)
 	boid.angle = Direction(V).angle;
 	boid.speed = BETA * log(V.norm() + 1.0);
 	boid.vctr = Eigen::Vector2d(-sin(boid.angle) * boid.speed, cos(boid.angle) * boid.speed);
-	return boid;
+	return std::forward_as_tuple(boid, connections);
 }
 
 void drawConnections()
@@ -311,20 +313,20 @@ void createGrids()
 //this function needs grids, boids
 void updateGrids()
 {
-	for (int i = NEAR_GRID_NO; i < GRID_NO + NEAR_GRID_NO; i++)
-	{
-		for (int j = NEAR_GRID_NO; j < GRID_NO + NEAR_GRID_NO; j++)
-		{
-			std::vector<int> indexes = grids[i][j].boidIndexes;
-			for (auto n : indexes)
-			{
-				if (boids[n].grid_y != i || boids[n].grid_x != j)
-				{
-					grids[i][j].deleteBoidByIndex(n);
-				}
-			}
-		}
-	}
+	Concurrency::parallel_for(NEAR_GRID_NO, GRID_NO + NEAR_GRID_NO, 1, [](int i)
+                          {
+	                          for (int j = NEAR_GRID_NO; j < GRID_NO + NEAR_GRID_NO; j++)
+	                          {
+		                          std::vector<int> indexes = grids[i][j].boidIndexes;
+		                          for (auto n : indexes)
+		                          {
+			                          if (boids[n].grid_y != i || boids[n].grid_x != j)
+			                          {
+				                          grids[i][j].deleteBoidByIndex(n);
+			                          }
+		                          }
+	                          }
+                          });
 }
 
 void coloringGrids()
@@ -440,25 +442,17 @@ void display(void)
 	//	coloringGrids();
 	drawWall();
 	drawConnections();
-	//	std::vector<GLfloat> vtxs;
-	//	for (auto boid : boids)
-	//	{
-	//		std::vector<GLfloat> v2 = boid.drawBaseBoid();
-	//		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
-	//	}
-	//	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
-	//	glEnableClientState(GL_VERTEX_ARRAY);
-	//	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
-	//	glDisableClientState(GL_VERTEX_ARRAY);
-
+	std::vector<GLfloat> vtxs;
+	for (auto boid : boids)
+	{
+		std::vector<GLfloat> v2 = boid.drawBaseBoid();
+		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
+	}
+	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
-	int a = boids.size() * 3;
-	/* 頂点データの場所を指定する */
-	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-	glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawArrays(GL_TRIANGLES, 0, a);
+	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
 	glDisableClientState(GL_VERTEX_ARRAY);
+
 	for (auto block : blocks)
 	{
 		if (!block.disabled)
@@ -524,14 +518,14 @@ void mouse(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON)
 		{
-			std::cout << "distractor" << std::endl;
+			std::cout << "\r" << "distractor" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			mouseState = 1;
 		}
 		if (button == GLUT_RIGHT_BUTTON)
 		{
-			std::cout << "attractor" << std::endl;
+			std::cout << "\r" << "attractor" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			mouseState = 2;
@@ -626,6 +620,14 @@ void key(unsigned char key, int x, int y)
 	}
 }
 
+void findGrids()
+{
+	for (int i = 0; i < boids.size(); ++i)
+	{
+		findGrid(i, boids[i].x, boids[i].y);
+	}
+}
+
 void timer(int value)
 {
 	//	if (seconds % 10 == 0)
@@ -635,21 +637,33 @@ void timer(int value)
 	//		std::cout << "" << std::endl;
 	//	}
 	removeAllConnections();
-	for (int i = 0; i < boids.size(); i++)
-	{
-		boids[i].updatePosition();
-		//		if (i != 0)
-		//		{
-		//			boids[i].setColor(1.0, 1.0, 1.0);
-		//		}
-		findGrid(i, boids[i].x, boids[i].y);
-	}
+	Concurrency::parallel_for<int>(0, boids.size(), 1, [](int i)
+                               {
+	                               boids[i].updatePosition();
+	                               //		if (i != 0)
+	                               //		{
+	                               //			boids[i].setColor(1.0, 1.0, 1.0);
+	                               //		}
+                               });
+	findGrids();
 	updateGrids();
-	for (int i = 0; i < boids.size(); i++)
-	{
-		//boid速度ベクトルの計算部分
-		boids[i] = updateSpeedAndAngle(boids[i]);
-	}
+	clock_t start = clock(); // スタート時間
+	std::vector<std::tuple<int, int>> connections;
+	std::mutex mtx;
+
+	Concurrency::parallel_for<int>(0, boids.size(), 1, [&mtx, &connections](int i)
+                               {
+	                               //boid速度ベクトルの計算部分
+	                               std::vector<std::tuple<int, int>> conn;
+	                               std::tie(boids[i], conn) = updateSpeedAndAngle(boids[i]);
+	                               mtx.lock();
+	                               connections.insert(connections.end(), conn.begin(), conn.end());
+	                               mtx.unlock();
+                               });
+	addConnections(connections);
+	uniqleConnections();
+	clock_t end = clock(); // 終了時間
+	std::cout << "duration = " << double(end - start) / CLOCKS_PER_SEC << "sec.\r" << std::flush;
 	glutPostRedisplay();
 	seconds++;
 	glutTimerFunc(FLAME_RATE, timer, seconds);
@@ -658,16 +672,6 @@ void timer(int value)
 void init(void)
 {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glGenBuffers(1, buffers);
-	std::vector<GLfloat> vtxs;
-
-	for (auto boid : boids)
-	{
-		std::vector<GLfloat> v2 = boid.drawBaseBoid();
-		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
-	}
-	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof vtxs.data(), vtxs.data(), GL_STATIC_DRAW);
 }
 
 int main(int argc, char* argv[])
@@ -677,13 +681,13 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA);
 	glutCreateWindow(argv[0]);
-	glewInit();
 	printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 	printf("Vendor: %s\n", glGetString(GL_VENDOR));
 	printf("GPU: %s\n", glGetString(GL_RENDERER));
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutKeyboardFunc(key);
+	init();
 	createGrids();
 
 	for (int i = 0; i < BOIDS_NO; i++)
@@ -701,150 +705,9 @@ int main(int argc, char* argv[])
 		whereBlock(i, blocks[i].x, blocks[i].y);
 	}
 	updateGrids();
-	init();
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
 	glutTimerFunc(FLAME_RATE, timer, seconds);
 	glutMainLoop();
 	return 0;
 }
-
-//
-////-------- 各種外部変数 ----------//
-//float points[] =
-//{
-//	0,1,0,
-//	-0.5, 0,0,
-//	0.5, 0,0
-//};
-//
-////VBO用ID
-//GLuint VboId[1];
-//
-////----------- 関数プロトタイプ ----------------//
-//void display();
-//void reshape(int w, int h);
-//void timer(int value);
-//void BuildVBO();
-//
-//
-////----------- OpenGLの初期設定 ---------------//
-//void GLUT_INIT()
-//{
-//	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-//	glutCreateWindow("VBO ");
-//}
-//
-//void GLUT_CALL_FUNC()
-//{
-//	glutDisplayFunc(display);
-//	glutReshapeFunc(reshape);
-//	glutTimerFunc(0, timer, 17);
-//}
-//
-//bool GLEW_INIT()
-//{
-//	GLenum err;
-//	err = glewInit();
-//	if (err != GLEW_OK) {
-//		std::cerr << glewGetErrorString(err) << "\n";
-//		return false;
-//	}
-//	return true;
-//}
-//
-//void MY_INIT()
-//{
-//	glClearColor(1.0, 1.0, 1.0, 1.0);
-//}
-//
-////---------- メイン関数 ---------------//
-//int main(int argc, char **argv)
-//{
-//	glutInit(&argc, argv);
-//	GLUT_INIT();
-//	GLUT_CALL_FUNC();
-//	MY_INIT();
-//
-//	if (GLEW_INIT() == false) {
-//		return -1;
-//	}
-//
-//	BuildVBO();
-//	glutMainLoop();
-//
-//	return 0;
-//}
-
-////------------- ここから各種コールバック ------------------//
-//void display()
-//{
-//	static float angle = 0;
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//	glColor3f(1, 0, 1);
-//
-//	//VBOで描画
-//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]);
-//	glEnableClientState(GL_VERTEX_ARRAY);
-//	glVertexPointer(3, GL_FLOAT, 0, 0);  //最後の引数は「0」を指定
-//	glDrawArrays(GL_TRIANGLES, 0, 3);
-//	glDisableClientState(GL_VERTEX_ARRAY);
-//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-//
-//	glColor3f(1, 1, 1);
-//
-//	glutSwapBuffers();
-//
-//
-//	//アップデート
-//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]);
-//	float *ptr = (float*)glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_READ_WRITE_ARB);
-//	if (ptr)
-//	{
-//		ptr[2] = sin(angle); //1つ目の頂点、z座標を動かす
-//		angle += 0.1;
-//		if (angle > 360) angle = 0;
-//		glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
-//	}
-//
-//}
-//
-//void reshape(int w, int h)
-//{
-//	glViewport(0, 0, w, h);  //ビューポートの設定
-//
-//	glMatrixMode(GL_PROJECTION);
-//	glLoadIdentity();
-//	gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0); //視野の設定
-//	glMatrixMode(GL_MODELVIEW);
-//
-//	glLoadIdentity();
-//	gluLookAt(3.0, 4.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); //視点の設定
-//}
-//
-//void timer(int t)
-//{
-//	glutPostRedisplay();
-//	glutTimerFunc(t, timer, 17); //タイマー関数
-//}
-//
-//
-////--------------------------//
-//void BuildVBO()
-//{
-//	glGenBuffersARB(1, &VboId[0]);   //発生
-//	glBindBufferARB(GL_ARRAY_BUFFER_ARB, VboId[0]); //バインド
-//
-//													//データをVBOにコピー
-//	glBufferDataARB(GL_ARRAY_BUFFER_ARB, 3 * 3 * sizeof(float), points, GL_DYNAMIC_DRAW);
-//
-//	//例外チェック(VBOと配列のサイズがあっているか？)
-//	int bufferSize = 0;
-//	glGetBufferParameterivARB(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-//	if (3 * 3 * sizeof(float) != bufferSize) {//一致していない場合
-//		glDeleteBuffersARB(1, &VboId[0]);
-//		VboId[0] = 0;
-//		std::cout << "Can't Create VBO\n";
-//	}
-//
-//}
