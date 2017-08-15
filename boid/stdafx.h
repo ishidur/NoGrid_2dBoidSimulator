@@ -10,6 +10,7 @@
 #include <tchar.h>
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください
+#define _USE_MATH_DEFINES
 
 #include <GL/glew.h>
 #include <GL/glut.h>

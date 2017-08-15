@@ -2,7 +2,6 @@
 // Created by Ryota Ishidu, Morishita Lab.
 
 #include "stdafx.h"
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <vector>
 #include <tuple>
@@ -174,7 +173,7 @@ std::tuple<BaseBoid, std::vector<std::tuple<int, int>>> updateSpeedAndAngle(Base
 		}
 		if (mouseState == 2)
 		{
-			if (true)
+			if (dist - MOUSE_SIZE - boid.size < R_2 * MOUSE_ATTRACTION_FORCE)
 			{
 				/*rule2*/
 				n2++;
@@ -238,15 +237,15 @@ void drawConnections()
 	std::mutex mtx;
 
 	Concurrency::parallel_for<int>(0, boidConnections.size(), 1, [&mtx, &vtxs](int i)
-	{
-		std::vector<GLfloat> vtx2 = {
-			GLfloat(boids[std::get<0>(boidConnections[i])].x), GLfloat(boids[std::get<0>(boidConnections[i])].y),
-			GLfloat(boids[std::get<1>(boidConnections[i])].x), GLfloat(boids[std::get<1>(boidConnections[i])].y),
-		};
-		mtx.lock();
-		vtxs.insert(vtxs.end(), vtx2.begin(), vtx2.end());
-		mtx.unlock();
-	});
+                               {
+	                               std::vector<GLfloat> vtx2 = {
+		                               GLfloat(boids[std::get<0>(boidConnections[i])].x), GLfloat(boids[std::get<0>(boidConnections[i])].y),
+		                               GLfloat(boids[std::get<1>(boidConnections[i])].x), GLfloat(boids[std::get<1>(boidConnections[i])].y),
+	                               };
+	                               mtx.lock();
+	                               vtxs.insert(vtxs.end(), vtx2.begin(), vtx2.end());
+	                               mtx.unlock();
+                               });
 
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	//		glLineWidth(4.0f);
@@ -438,12 +437,12 @@ void display(void)
 	std::mutex mtx;
 
 	Concurrency::parallel_for<int>(0, boids.size(), 1, [&mtx, &vtxs](int i)
-	{
-		std::vector<GLfloat> v2 = boids[i].drawBaseBoid();
-		mtx.lock();
-		vtxs.insert(vtxs.end(), v2.begin(), v2.end());
-		mtx.unlock();
-	});
+                               {
+	                               std::vector<GLfloat> v2 = boids[i].drawBaseBoid();
+	                               mtx.lock();
+	                               vtxs.insert(vtxs.end(), v2.begin(), v2.end());
+	                               mtx.unlock();
+                               });
 	glVertexPointer(2, GL_FLOAT, 0, vtxs.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_TRIANGLES, 0, vtxs.size() / 2);
@@ -479,7 +478,7 @@ void display(void)
 
 		double angl = 2.0 * M_PI / CIRCLE_SLICE;
 		glColor3d(r, g, b);
-		GLfloat mouseVtxs[CIRCLE_SLICE * 2 + 4] = { 0.0 };
+		GLfloat mouseVtxs[CIRCLE_SLICE * 2 + 4] = {0.0};
 		mouseVtxs[0] = GLfloat(mouseX);
 		mouseVtxs[1] = GLfloat(mouseY);
 		for (int i = 1; i <= CIRCLE_SLICE + 1; ++i)
@@ -511,14 +510,14 @@ void mouse(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON)
 		{
-//			std::cout<< "distractor" << std::endl;
+			//			std::cout<< "distractor" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			mouseState = 1;
 		}
 		if (button == GLUT_RIGHT_BUTTON)
 		{
-//			std::cout << "attractor" << std::endl;
+			//			std::cout << "attractor" << std::endl;
 			mouseX = pos_x;
 			mouseY = pos_y;
 			mouseState = 2;
@@ -549,7 +548,7 @@ void key(unsigned char key, int x, int y)
 	{
 		/*remove all blocks*/
 		removeAllBlocks();
-//		std::cout << "refresh" << std::endl;
+		//		std::cout << "refresh" << std::endl;
 	}
 	if (key == 'i')
 	{
@@ -571,10 +570,10 @@ void key(unsigned char key, int x, int y)
 		{
 			boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
 			findGrid(i, boids[i].x, boids[i].y);
-			if (i == 0)
-			{
-				boids[i].setColor(1.0, 0.0, 0.0);
-			}
+//			if (i == 0)
+//			{
+//				boids[i].setColor(1.0, 0.0, 0.0);
+//			}
 		}
 	}
 	if (key == 'b')
@@ -583,7 +582,7 @@ void key(unsigned char key, int x, int y)
 		int index = findDuplicateBlock(pos_x, pos_y);
 		if (index != -1)
 		{
-//			std::cout << "exist" << index << std::endl;
+			//			std::cout << "exist" << index << std::endl;
 			removeBlock(index, pos_x, pos_y);
 		}
 		else
@@ -604,10 +603,10 @@ void key(unsigned char key, int x, int y)
 		{
 			int index = boids.size();
 			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, index));
-			if (index == 0)
-			{
-				boids[index].setColor(1.0, 0.0, 0.0);
-			}
+//			if (index == 0)
+//			{
+//				boids[index].setColor(1.0, 0.0, 0.0);
+//			}
 			findGrid(index, boids[index].x, boids[index].y);
 		}
 	}
@@ -682,10 +681,12 @@ int main(int argc, char* argv[])
 	glutKeyboardFunc(key);
 	init();
 	createGrids();
-
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
-		boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
+		double x = (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / double(RAND_MAX);
+		double y = (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / double(RAND_MAX);
+		double ang = (double(rand()) / RAND_MAX) * 2.0 * M_PI;
+		boids.push_back(BaseBoid(x, y, ang, BOID_SIZE, BOID_SPEED, i));
 		findGrid(i, boids[i].x, boids[i].y);
 		//		if (i == 0)
 		//		{

@@ -1,6 +1,5 @@
 ﻿#include "stdafx.h"
 #include "Block.h"
-#include <corecrt_math_defines.h>
 #include <cmath>
 
 Block::Block(double _x, double _y, double _r)
