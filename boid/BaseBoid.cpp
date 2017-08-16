@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BaseBoid.h"
 #include "Direction.h"
+#include <iostream>
 
 double checkBoundary(double pos)
 {
@@ -26,7 +27,6 @@ BaseBoid::BaseBoid(double _x, double _y, double _angle, double _size, double _sp
 	x = _x;
 	y = _y;
 	angle = _angle;
-	size = _size;
 	vctr = Eigen::Vector2d(-sin(_angle) * _speed, cos(_angle) * _speed);
 }
 
@@ -35,6 +35,11 @@ void BaseBoid::setColor(double red, double green, double blue)
 	r = red;
 	g = green;
 	b = blue;
+}
+
+void BaseBoid::setSize(double _size)
+{
+	size = _size;
 }
 
 std::vector<GLfloat> BaseBoid::drawBaseBoid()

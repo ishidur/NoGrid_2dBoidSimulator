@@ -570,10 +570,10 @@ void key(unsigned char key, int x, int y)
 		{
 			boids.push_back(BaseBoid((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, i));
 			findGrid(i, boids[i].x, boids[i].y);
-//			if (i == 0)
-//			{
-//				boids[i].setColor(1.0, 0.0, 0.0);
-//			}
+			//			if (i == 0)
+			//			{
+			//				boids[i].setColor(1.0, 0.0, 0.0);
+			//			}
 		}
 	}
 	if (key == 'b')
@@ -603,10 +603,10 @@ void key(unsigned char key, int x, int y)
 		{
 			int index = boids.size();
 			boids.push_back(BaseBoid(pos_x, pos_y, (double(rand()) / RAND_MAX) * 2.0 * M_PI, BOID_SIZE, BOID_SPEED, index));
-//			if (index == 0)
-//			{
-//				boids[index].setColor(1.0, 0.0, 0.0);
-//			}
+			//			if (index == 0)
+			//			{
+			//				boids[index].setColor(1.0, 0.0, 0.0);
+			//			}
 			findGrid(index, boids[index].x, boids[index].y);
 		}
 	}
@@ -681,6 +681,7 @@ int main(int argc, char* argv[])
 	glutKeyboardFunc(key);
 	init();
 	createGrids();
+	boids.reserve(BOIDS_NO);
 	for (int i = 0; i < BOIDS_NO; i++)
 	{
 		double x = (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - WALL_SIZE - BOID_SIZE) * 2.0 / double(RAND_MAX);
@@ -693,6 +694,7 @@ int main(int argc, char* argv[])
 		//			boids[i].setColor(1.0, 0.0, 0.0);
 		//		}
 	}
+	blocks.reserve(BLOCK_NO);
 	for (int i = 0; i < BLOCK_NO; ++i)
 	{
 		blocks.push_back(Block((double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, (double(rand()) - RAND_MAX / 2.0) * (BOUNDARY - BLOCK_SIZE - BOID_SIZE) * 2.0 / RAND_MAX, BLOCK_SIZE));
