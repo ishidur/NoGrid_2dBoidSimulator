@@ -29,7 +29,7 @@ Grid grids[GRID_NO + NEAR_GRID_NO * 2][GRID_NO + NEAR_GRID_NO * 2];
 std::vector<Block> blocks;
 std::vector<std::tuple<int, int>> boidConnections;
 
-void addConnections(std::vector<std::tuple<int, int>> newConnections)
+void addConnections(std::vector<std::tuple<int, int>> const& newConnections)
 {
 	boidConnections.insert(boidConnections.end(), newConnections.begin(), newConnections.end());
 }
